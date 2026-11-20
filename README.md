@@ -94,8 +94,9 @@ stateDiagram-v2
         QuinielaVesp --> TombolaVesp: Espera rotacionSegundos
         TombolaVesp --> QuinielaNoct: Siguiente slide activa
         QuinielaNoct --> TombolaNoct: Siguiente slide activa
-        TombolaNoct --> CincoDeOro: Siguiente slide activa
-        CincoDeOro --> OfertasKiosko: Siguiente slide activa
+        TombolaNoct --> CincoDeOroSorteo: Siguiente slide activa
+        CincoDeOroSorteo --> CincoDeOroPozos: Siguiente slide activa
+        CincoDeOroPozos --> OfertasKiosko: Siguiente slide activa
         OfertasKiosko --> QuinielaVesp: Reinicia ciclo
     }
 
@@ -120,9 +121,14 @@ stateDiagram-v2
 2. **Tómbola (Vespertina & Nocturna)**:
    - Fondo rojo carmesí oficial de La Tómbola.
    - 20 bolillas celestes con acabado esférico sombreado en 3D, ordenadas numéricamente.
-3. **5 de Oro (Pozos Acumulados)**:
+3. **5 de Oro (Resultados del Sorteo)**:
+   - Fondo en **tonalidades azules profundas** y barra lateral izquierda con logo oficial, fecha y día del sorteo (Miércoles y Domingos).
+   - **Bolillas Doradas 3D con letras negras**: 5 bolillas de Pozo de Oro + Bolilla Extra en ámbar/naranja + 5 bolillas de Pozo Revancha.
+   - Estado de vacante o ganadores para Pozo de Oro y Revancha.
+   - Banner inferior con los pozos estimados para el próximo sorteo.
+4. **5 de Oro (Pozos Acumulados)**:
    - Montos destacados en tipografía gigante para el **Pozo de Oro** y **Pozo Revancha**.
-   - Leyenda dinámica de la fecha del próximo sorteo (ej. *"Lunes 23"*).
+   - Leyenda dinámica de la fecha del próximo sorteo (ej. *"Lunes 23"* o *"Domingo 22"*).
    - **Selector de Paletas de Color en Vivo**:
      - 🔵 Azul Oficial (por defecto)
      - 🟣 Violeta Premium

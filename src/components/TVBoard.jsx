@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { TombolaSlide } from './slides/TombolaSlide';
 import { QuinielaSlide } from './slides/QuinielaSlide';
 import { CincoDeOroSlide } from './slides/CincoDeOroSlide';
+import { CincoDeOroSorteoSlide } from './slides/CincoDeOroSorteoSlide';
 import { PromoSlide } from './slides/PromoSlide';
 import { Maximize, Minimize, SkipForward, SkipBack, Pause, Play, ChevronRight, ChevronLeft } from 'lucide-react';
 
@@ -218,12 +219,35 @@ export function TVBoard() {
       });
     }
 
-    // 5. 5 de Oro Pozos
+    // 5. 5 de Oro Sorteo (Bolillas Doradas oficiales)
+    if (active.cincoDeOroSorteo !== false) {
+      slides.push({
+        id: 'cincoDeOroSorteo',
+        title: 'Sorteo 5 de Oro',
+        component: (
+          <CincoDeOroSorteoSlide
+            fecha={data.cincoDeOro?.fecha || '18/11/26'}
+            numerosOro={data.cincoDeOro?.numerosOro || []}
+            bolillaExtra={data.cincoDeOro?.bolillaExtra || ''}
+            numerosRevancha={data.cincoDeOro?.numerosRevancha || []}
+            aciertosOro={data.cincoDeOro?.aciertosOro ?? 0}
+            aciertosPlata={data.cincoDeOro?.aciertosPlata ?? 0}
+            aciertosRevancha={data.cincoDeOro?.aciertosRevancha ?? 0}
+            pozoOro={data.cincoDeOro?.pozoOro || '$ 0'}
+            pozoRevancha={data.cincoDeOro?.pozoRevancha || '$ 0'}
+            proximoSorteo={data.cincoDeOro?.proximoSorteo || ''}
+            tema={data.cincoDeOro?.tema || 'blue'}
+          />
+        )
+      });
+    }
+
+    // 6. 5 de Oro Pozos
     if (active.cincoDeOro !== false) {
       const cOroTema = data.cincoDeOro?.tema || 'blue';
       slides.push({
         id: `cincoDeOro-${cOroTema}`,
-        title: '5 de Oro',
+        title: '5 de Oro Pozos',
         component: (
           <CincoDeOroSlide
             key={`slide-c5oro-${cOroTema}`}

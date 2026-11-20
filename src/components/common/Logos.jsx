@@ -52,3 +52,28 @@ export function QuinielaLogo({ className = "" }) {
     </div>
   );
 }
+
+// Exact replica of the official "5 de ORO" logo
+export function CincoDeOroLogo({ className = "" }) {
+  return (
+    <div className={`flex items-center gap-2 select-none ${className}`}>
+      {/* Official Golden Ball with number 5 */}
+      <div className="relative w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-full flex items-center justify-center bg-gradient-to-tr from-amber-600 via-yellow-400 to-yellow-100 shadow-[0_4px_12px_rgba(0,0,0,0.5)] border-2 border-amber-300">
+        <span className="text-black font-black text-2xl sm:text-3xl font-mono tracking-tight drop-shadow-sm">
+          5
+        </span>
+      </div>
+      <div className="flex flex-col leading-none">
+        <span className="text-[11px] sm:text-xs font-black italic tracking-widest text-yellow-300 uppercase">
+          de
+        </span>
+        <span 
+          className="text-2xl sm:text-3xl font-black tracking-tight text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]"
+          style={{ fontFamily: "'Montserrat', sans-serif" }}
+        >
+          ORO
+        </span>
+      </div>
+    </div>
+  );
+}

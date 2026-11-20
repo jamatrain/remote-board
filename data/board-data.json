@@ -8,6 +8,7 @@
     "tombolaVespertina": true,
     "quinielaNocturna": true,
     "tombolaNocturna": true,
+    "cincoDeOroSorteo": true,
     "cincoDeOro": true
   },
   "fechaGeneral": "20/11/26",
@@ -112,6 +113,25 @@
     ]
   },
   "cincoDeOro": {
+    "fecha": "18/11/26",
+    "numerosOro": [
+      "16",
+      "21",
+      "26",
+      "41",
+      "42"
+    ],
+    "bolillaExtra": "19",
+    "numerosRevancha": [
+      "03",
+      "06",
+      "33",
+      "35",
+      "39"
+    ],
+    "aciertosOro": 0,
+    "aciertosPlata": 1,
+    "aciertosRevancha": 1,
     "pozoOro": "$ 16.500.000",
     "pozoRevancha": "$ 5.500.000",
     "proximoSorteo": "Lunes 23",

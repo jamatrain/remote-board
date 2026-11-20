@@ -154,6 +154,27 @@ export async function syncWithLaBanca(currentData) {
 
     // 5. 5 de Oro
     if (cOro) {
+      const fecha = formatDate(cOro.fecha);
+      const numerosOro = [
+        String(cOro.bolilla1 !== undefined && cOro.bolilla1 !== null ? cOro.bolilla1 : '').padStart(2, '0'),
+        String(cOro.bolilla2 !== undefined && cOro.bolilla2 !== null ? cOro.bolilla2 : '').padStart(2, '0'),
+        String(cOro.bolilla3 !== undefined && cOro.bolilla3 !== null ? cOro.bolilla3 : '').padStart(2, '0'),
+        String(cOro.bolilla4 !== undefined && cOro.bolilla4 !== null ? cOro.bolilla4 : '').padStart(2, '0'),
+        String(cOro.bolilla5 !== undefined && cOro.bolilla5 !== null ? cOro.bolilla5 : '').padStart(2, '0')
+      ];
+      const bolillaExtra = String(cOro.bolillaExtra !== undefined && cOro.bolillaExtra !== null ? cOro.bolillaExtra : '').padStart(2, '0');
+      const numerosRevancha = [
+        String(cOro.bolilla1Rev !== undefined && cOro.bolilla1Rev !== null ? cOro.bolilla1Rev : '').padStart(2, '0'),
+        String(cOro.bolilla2Rev !== undefined && cOro.bolilla2Rev !== null ? cOro.bolilla2Rev : '').padStart(2, '0'),
+        String(cOro.bolilla3Rev !== undefined && cOro.bolilla3Rev !== null ? cOro.bolilla3Rev : '').padStart(2, '0'),
+        String(cOro.bolilla4Rev !== undefined && cOro.bolilla4Rev !== null ? cOro.bolilla4Rev : '').padStart(2, '0'),
+        String(cOro.bolilla5Rev !== undefined && cOro.bolilla5Rev !== null ? cOro.bolilla5Rev : '').padStart(2, '0')
+      ];
+
+      const aciertosOro = Number(cOro.aciertosOro ?? 0);
+      const aciertosPlata = Number(cOro.aciertosPlata ?? 0);
+      const aciertosRevancha = Number(cOro.aciertosRevancha ?? 0);
+
       const pozoOro = formatCurrency(cOro.estimadoOro || cOro.pozoOro);
       const pozoRevancha = formatCurrency(cOro.estimadoRevancha || cOro.pozoRevancha);
       const proximoSorteo = formatProximoSorteo(cOro.fechaProxima);
@@ -161,18 +182,34 @@ export async function syncWithLaBanca(currentData) {
       const oldOro = currentData.cincoDeOro?.pozoOro;
       const oldRev = currentData.cincoDeOro?.pozoRevancha;
       const oldSorteo = currentData.cincoDeOro?.proximoSorteo;
+      const oldFecha = currentData.cincoDeOro?.fecha;
+      const oldNumsOro = (currentData.cincoDeOro?.numerosOro || []).join(',');
+      const newNumsOro = numerosOro.join(',');
 
-      if (pozoOro !== oldOro || pozoRevancha !== oldRev || proximoSorteo !== oldSorteo) {
+      if (
+        pozoOro !== oldOro || 
+        pozoRevancha !== oldRev || 
+        proximoSorteo !== oldSorteo || 
+        oldFecha !== fecha || 
+        oldNumsOro !== newNumsOro
+      ) {
         updatedData.cincoDeOro = {
           ...currentData.cincoDeOro,
+          fecha,
+          numerosOro,
+          bolillaExtra,
+          numerosRevancha,
+          aciertosOro,
+          aciertosPlata,
+          aciertosRevancha,
           pozoOro,
           pozoRevancha,
           proximoSorteo
         };
         result.updated = true;
-        result.details.cincoDeOro = 'Pozos actualizados';
+        result.details.cincoDeOro = `Sorteo ${fecha} actualizado (Oro: ${numerosOro.join('-')} + ${bolillaExtra} | Revancha: ${numerosRevancha.join('-')})`;
       } else {
-        result.details.cincoDeOro = 'Pozos coinciden con lo emitido previamente.';
+        result.details.cincoDeOro = 'Sorteo y pozos coinciden con lo emitido previamente.';
       }
     }
 

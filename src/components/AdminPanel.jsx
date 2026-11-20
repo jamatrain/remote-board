@@ -335,6 +335,27 @@ export function AdminPanel() {
     }
   };
 
+  const handleCincoDeOroNumberChange = (subfield, index, value) => {
+    const clean = value.replace(/\D/g, '').slice(0, 2);
+    const updated = [...(data.cincoDeOro?.[subfield] || Array(5).fill(''))];
+    updated[index] = clean;
+
+    setData({
+      ...data,
+      cincoDeOro: {
+        ...data.cincoDeOro,
+        [subfield]: updated
+      }
+    });
+
+    if (clean.length === 2 && index < 4) {
+      const nextKey = `c5oro-${subfield}-${index + 1}`;
+      if (inputsRef.current[nextKey]) {
+        inputsRef.current[nextKey].focus();
+      }
+    }
+  };
+
   const generateTombolaFromQuiniela = (quinielaKey, tombolaKey) => {
     const quinielaNums = data[quinielaKey]?.numeros || [];
     const extracted = quinielaNums
@@ -733,11 +754,18 @@ export function AdminPanel() {
                 onClick={() => sendTvControl('goto', 4)}
                 className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-xs font-black text-white rounded-lg whitespace-nowrap border border-blue-400 shadow-md"
               >
-                🪙 5 de Oro
+                🪙 Sorteo 5 Oro
               </button>
               <button
                 type="button"
                 onClick={() => sendTvControl('goto', 5)}
+                className="px-3 py-1.5 bg-indigo-700 hover:bg-indigo-600 active:bg-indigo-800 text-xs font-black text-yellow-300 rounded-lg whitespace-nowrap border border-indigo-400 shadow-md"
+              >
+                💰 Pozos 5 Oro
+              </button>
+              <button
+                type="button"
+                onClick={() => sendTvControl('goto', 6)}
                 className="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-400 active:bg-yellow-600 text-xs font-black text-black rounded-lg whitespace-nowrap shadow-md"
               >
                 ★ Ofertas Kiosko
@@ -1086,161 +1114,333 @@ export function AdminPanel() {
 
         {/* TAB 5: 5 DE ORO */}
         {activeTab === 'cincoDeOro' && (
-          <div className="bg-gray-900 border border-blue-900/40 rounded-2xl p-4 flex flex-col gap-5 shadow-xl">
-            <div className="border-b border-gray-800 pb-3">
-              <h2 className="text-base font-black text-blue-400 uppercase tracking-wide">
-                5 de Oro - Pozos Aproximados
-              </h2>
-              <p className="text-xs text-gray-400">Montos y fecha del próximo sorteo oficial</p>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-yellow-400 uppercase tracking-wider">
-                Pozo de Oro ($)
-              </label>
-              <input
-                type="text"
-                value={data.cincoDeOro?.pozoOro || ''}
-                onChange={(e) => {
-                  setData({
-                    ...data,
-                    cincoDeOro: {
-                      ...data.cincoDeOro,
-                      pozoOro: formatCurrency(e.target.value)
-                    }
-                  });
-                }}
-                placeholder="$ 17.400.000"
-                className="w-full bg-gray-950 text-white font-mono font-black text-2xl py-3 px-4 rounded-xl border border-gray-700 focus:border-blue-400 outline-none"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-yellow-400 uppercase tracking-wider">
-                Pozo Revancha ($)
-              </label>
-              <input
-                type="text"
-                value={data.cincoDeOro?.pozoRevancha || ''}
-                onChange={(e) => {
-                  setData({
-                    ...data,
-                    cincoDeOro: {
-                      ...data.cincoDeOro,
-                      pozoRevancha: formatCurrency(e.target.value)
-                    }
-                  });
-                }}
-                placeholder="$ 26.600.000"
-                className="w-full bg-gray-950 text-white font-mono font-black text-2xl py-3 px-4 rounded-xl border border-gray-700 focus:border-blue-400 outline-none"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">
-                Leyenda Próximo Sorteo
-              </label>
-              <input
-                type="text"
-                value={data.cincoDeOro?.proximoSorteo || ''}
-                onChange={(e) => {
-                  setData({
-                    ...data,
-                    cincoDeOro: {
-                      ...data.cincoDeOro,
-                      proximoSorteo: e.target.value
-                    }
-                  });
-                }}
-                placeholder="Ej: Jueves 5, Lunes 23"
-                className="w-full bg-gray-950 text-white font-bold text-lg py-2.5 px-4 rounded-xl border border-gray-700 focus:border-blue-400 outline-none"
-              />
-            </div>
-
-            {/* Selector de Color / Fondo del 5 de Oro */}
-            <div className="flex flex-col gap-2.5 bg-gray-950/80 p-4 rounded-xl border border-gray-800 mt-1">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-black text-yellow-400 uppercase tracking-wider flex items-center gap-1.5">
+          <div className="bg-gray-900 border border-blue-900/40 rounded-2xl p-4 flex flex-col gap-6 shadow-xl">
+            <div className="border-b border-gray-800 pb-3 flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-black text-blue-400 uppercase tracking-wide flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-yellow-400" />
-                  Color de Fondo del 5 de Oro
-                </label>
-                <span className="text-[11px] text-gray-300 font-bold capitalize">
-                  {(data.cincoDeOro?.tema || 'blue') === 'blue' ? 'Azul Oficial' :
-                   (data.cincoDeOro?.tema || 'blue') === 'gold' ? 'Dorado Millonario' :
-                   (data.cincoDeOro?.tema || 'blue') === 'purple' ? 'Púrpura Fortuna' :
-                   (data.cincoDeOro?.tema || 'blue') === 'emerald' ? 'Verde Esmeralda' :
-                   (data.cincoDeOro?.tema || 'blue') === 'ruby' ? 'Rojo Rubí' : 'Noche Profunda'}
-                </span>
+                  5 de Oro - Sorteo Oficial y Pozos
+                </h2>
+                <p className="text-xs text-gray-400">
+                  Resultados del sorteo (Miércoles y Domingos) con bolillas doradas y pozos acumulados
+                </p>
               </div>
-              <p className="text-[11px] text-gray-400">
-                Seleccioná el color o degradé para el slide del 5 de Oro en el televisor:
-              </p>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-1">
-                {[
-                  { id: 'blue', label: 'Azul Oficial', bg: 'bg-gradient-to-b from-[#001ae6] to-[#00086b]' },
-                  { id: 'gold', label: 'Dorado', bg: 'bg-gradient-to-b from-[#d97706] to-[#78350f]' },
-                  { id: 'purple', label: 'Púrpura', bg: 'bg-gradient-to-b from-[#6b21a8] to-[#3b0764]' },
-                  { id: 'emerald', label: 'Verde', bg: 'bg-gradient-to-b from-[#047857] to-[#064e3b]' },
-                  { id: 'ruby', label: 'Rojo Rubí', bg: 'bg-gradient-to-b from-[#b91c1c] to-[#450a0a]' },
-                  { id: 'dark', label: 'Noche', bg: 'bg-gradient-to-b from-[#1e293b] to-[#020617]' }
-                ].map((th) => {
-                  const isSelected = (data.cincoDeOro?.tema || 'blue') === th.id;
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-gray-400">Fecha Sorteo:</span>
+                <input
+                  type="text"
+                  value={data.cincoDeOro?.fecha || '18/11/26'}
+                  onChange={(e) => {
+                    setData({
+                      ...data,
+                      cincoDeOro: {
+                        ...data.cincoDeOro,
+                        fecha: e.target.value
+                      }
+                    });
+                  }}
+                  placeholder="DD/MM/AA"
+                  maxLength={10}
+                  className="w-24 bg-gray-950 text-yellow-300 font-mono font-bold text-xs text-center py-1 px-2 rounded-lg border border-gray-700 focus:border-yellow-400 outline-none"
+                />
+              </div>
+            </div>
+
+            {/* SECCIÓN 1: RESULTADOS DEL POZO DE ORO */}
+            <div className="bg-gray-950/70 p-4 rounded-xl border border-blue-800/40 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 shadow-[0_0_6px_#facc15]" />
+                  <span className="text-xs font-black text-yellow-300 uppercase tracking-wider">
+                    POZO DE ORO (5 Bolillas + Extra)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-gray-400">Estado:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setData({
+                        ...data,
+                        cincoDeOro: {
+                          ...data.cincoDeOro,
+                          aciertosOro: Number(data.cincoDeOro?.aciertosOro) === 0 ? 1 : 0
+                        }
+                      });
+                    }}
+                    className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase transition border ${
+                      Number(data.cincoDeOro?.aciertosOro) === 0
+                        ? 'bg-yellow-400/20 border-yellow-400 text-yellow-300'
+                        : 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
+                    }`}
+                  >
+                    {Number(data.cincoDeOro?.aciertosOro) === 0 ? '¡ VACANTE !' : `${data.cincoDeOro?.aciertosOro || 1} ACIERTO/S`}
+                  </button>
+                </div>
+              </div>
+
+              {/* Bolillas de Oro + Extra Inputs */}
+              <div className="flex items-center justify-center gap-2 sm:gap-3 py-1">
+                {Array.from({ length: 5 }, (_, i) => {
+                  const val = data.cincoDeOro?.numerosOro?.[i] || '';
+                  const key = `c5oro-numerosOro-${i}`;
                   return (
-                    <button
-                      key={th.id}
-                      type="button"
-                      onClick={async () => {
-                        const updated = {
-                          ...data,
-                          cincoDeOro: {
-                            ...data.cincoDeOro,
-                            tema: th.id
-                          }
-                        };
-                        setData(updated);
-                        await handleSave(updated);
-                      }}
-                      className={`relative flex flex-col items-center justify-center py-3.5 px-1.5 rounded-xl border-2 transition-all shadow-md ${th.bg} ${
-                        isSelected
-                          ? 'border-yellow-400 ring-2 ring-yellow-400/50 scale-105 shadow-yellow-500/20'
-                          : 'border-white/20 hover:border-white/50 opacity-75 hover:opacity-100'
-                      }`}
-                    >
-                      {isSelected && (
-                        <div className="absolute top-1 right-1 bg-yellow-400 text-black rounded-full p-0.5 shadow">
-                          <Check className="w-3 h-3 stroke-[3]" />
-                        </div>
-                      )}
-                      <span className="text-xs font-black text-white drop-shadow tracking-tight">
-                        {th.label}
-                      </span>
-                    </button>
+                    <div key={i} className="flex flex-col items-center">
+                      <span className="text-[10px] font-bold text-gray-400 mb-1">#{i + 1}</span>
+                      <input
+                        ref={(el) => (inputsRef.current[key] = el)}
+                        type="tel"
+                        pattern="[0-9]*"
+                        maxLength={2}
+                        value={val}
+                        onChange={(e) => handleCincoDeOroNumberChange('numerosOro', i, e.target.value)}
+                        placeholder="--"
+                        className="w-13 h-13 sm:w-14 sm:h-14 bg-gray-900 text-yellow-300 font-mono font-black text-xl sm:text-2xl text-center rounded-xl border border-yellow-500/40 focus:border-yellow-400 focus:bg-gray-800 outline-none shadow-md"
+                      />
+                    </div>
+                  );
+                })}
+
+                <div className="text-yellow-400/80 font-black text-xl px-1 mt-5">+</div>
+
+                {/* Bolilla Extra */}
+                <div className="flex flex-col items-center">
+                  <span className="text-[10px] font-black text-orange-400 uppercase tracking-wider mb-1">
+                    EXTRA
+                  </span>
+                  <input
+                    ref={(el) => (inputsRef.current['c5oro-bolillaExtra'] = el)}
+                    type="tel"
+                    pattern="[0-9]*"
+                    maxLength={2}
+                    value={data.cincoDeOro?.bolillaExtra || ''}
+                    onChange={(e) => {
+                      const clean = e.target.value.replace(/\D/g, '').slice(0, 2);
+                      setData({
+                        ...data,
+                        cincoDeOro: {
+                          ...data.cincoDeOro,
+                          bolillaExtra: clean
+                        }
+                      });
+                    }}
+                    placeholder="--"
+                    className="w-13 h-13 sm:w-14 sm:h-14 bg-gray-900 text-orange-400 font-mono font-black text-xl sm:text-2xl text-center rounded-xl border-2 border-orange-500/60 focus:border-orange-400 focus:bg-gray-800 outline-none shadow-[0_0_12px_rgba(251,146,60,0.25)]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SECCIÓN 2: RESULTADOS DEL POZO REVANCHA */}
+            <div className="bg-gray-950/70 p-4 rounded-xl border border-blue-800/40 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_6px_#f59e0b]" />
+                  <span className="text-xs font-black text-amber-300 uppercase tracking-wider">
+                    POZO REVANCHA (5 Bolillas)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-gray-400">Estado:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setData({
+                        ...data,
+                        cincoDeOro: {
+                          ...data.cincoDeOro,
+                          aciertosRevancha: Number(data.cincoDeOro?.aciertosRevancha) === 0 ? 1 : 0
+                        }
+                      });
+                    }}
+                    className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase transition border ${
+                      Number(data.cincoDeOro?.aciertosRevancha) === 0
+                        ? 'bg-yellow-400/20 border-yellow-400 text-yellow-300'
+                        : 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
+                    }`}
+                  >
+                    {Number(data.cincoDeOro?.aciertosRevancha) === 0 ? '¡ VACANTE !' : `${data.cincoDeOro?.aciertosRevancha || 1} ACIERTO/S`}
+                  </button>
+                </div>
+              </div>
+
+              {/* 5 Bolillas Revancha Inputs */}
+              <div className="flex items-center justify-center gap-2 sm:gap-3 py-1">
+                {Array.from({ length: 5 }, (_, i) => {
+                  const val = data.cincoDeOro?.numerosRevancha?.[i] || '';
+                  const key = `c5oro-numerosRevancha-${i}`;
+                  return (
+                    <div key={i} className="flex flex-col items-center">
+                      <span className="text-[10px] font-bold text-gray-400 mb-1">#{i + 1}</span>
+                      <input
+                        ref={(el) => (inputsRef.current[key] = el)}
+                        type="tel"
+                        pattern="[0-9]*"
+                        maxLength={2}
+                        value={val}
+                        onChange={(e) => handleCincoDeOroNumberChange('numerosRevancha', i, e.target.value)}
+                        placeholder="--"
+                        className="w-13 h-13 sm:w-14 sm:h-14 bg-gray-900 text-yellow-300 font-mono font-black text-xl sm:text-2xl text-center rounded-xl border border-yellow-500/40 focus:border-yellow-400 focus:bg-gray-800 outline-none shadow-md"
+                      />
+                    </div>
                   );
                 })}
               </div>
+            </div>
 
-              {/* Mini Vista Previa en Vivo */}
-              <div 
-                className="w-full p-3.5 rounded-xl border border-white/20 text-center shadow-lg transition-all duration-300 mt-1"
-                style={{ 
-                  background: 
-                    (data.cincoDeOro?.tema === 'gold') ? 'linear-gradient(180deg, #d97706, #78350f)' :
-                    (data.cincoDeOro?.tema === 'purple') ? 'linear-gradient(180deg, #6b21a8, #3b0764)' :
-                    (data.cincoDeOro?.tema === 'emerald') ? 'linear-gradient(180deg, #047857, #064e3b)' :
-                    (data.cincoDeOro?.tema === 'ruby') ? 'linear-gradient(180deg, #b91c1c, #450a0a)' :
-                    (data.cincoDeOro?.tema === 'dark') ? 'linear-gradient(180deg, #0f172a, #020617)' :
-                    'linear-gradient(180deg, #001ae6, #00086b)'
-                }}
-              >
-                <span className="text-[10px] font-black uppercase tracking-widest text-yellow-300 block mb-0.5">
-                  VISTA PREVIA DEL COLOR EN EL TV
-                </span>
-                <span className="text-base sm:text-lg font-black text-white block drop-shadow">
-                  POZO DE ORO: {data.cincoDeOro?.pozoOro || '$ 16.500.000'}
-                </span>
-                <span className="text-[11px] font-bold text-white/90 block mt-0.5">
-                  {data.cincoDeOro?.proximoSorteo || 'Próximo Sorteo'}
-                </span>
+            {/* SECCIÓN 3: POZOS ESTIMADOS PRÓXIMO SORTEO */}
+            <div className="flex flex-col gap-4 border-t border-gray-800 pt-4">
+              <h3 className="text-xs font-black text-gray-300 uppercase tracking-wider">
+                Pozos Estimados y Próximo Sorteo
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-yellow-400 uppercase tracking-wider">
+                    Pozo de Oro ($)
+                  </label>
+                  <input
+                    type="text"
+                    value={data.cincoDeOro?.pozoOro || ''}
+                    onChange={(e) => {
+                      setData({
+                        ...data,
+                        cincoDeOro: {
+                          ...data.cincoDeOro,
+                          pozoOro: formatCurrency(e.target.value)
+                        }
+                      });
+                    }}
+                    placeholder="$ 17.400.000"
+                    className="w-full bg-gray-950 text-white font-mono font-black text-xl py-2.5 px-3 rounded-xl border border-gray-700 focus:border-blue-400 outline-none"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-yellow-400 uppercase tracking-wider">
+                    Pozo Revancha ($)
+                  </label>
+                  <input
+                    type="text"
+                    value={data.cincoDeOro?.pozoRevancha || ''}
+                    onChange={(e) => {
+                      setData({
+                        ...data,
+                        cincoDeOro: {
+                          ...data.cincoDeOro,
+                          pozoRevancha: formatCurrency(e.target.value)
+                        }
+                      });
+                    }}
+                    placeholder="$ 26.600.000"
+                    className="w-full bg-gray-950 text-white font-mono font-black text-xl py-2.5 px-3 rounded-xl border border-gray-700 focus:border-blue-400 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">
+                  Leyenda Próximo Sorteo (Miércoles / Domingo)
+                </label>
+                <input
+                  type="text"
+                  value={data.cincoDeOro?.proximoSorteo || ''}
+                  onChange={(e) => {
+                    setData({
+                      ...data,
+                      cincoDeOro: {
+                        ...data.cincoDeOro,
+                        proximoSorteo: e.target.value
+                      }
+                    });
+                  }}
+                  placeholder="Ej: Domingo 22, Miércoles 25, Lunes 23"
+                  className="w-full bg-gray-950 text-white font-bold text-base py-2 px-3 rounded-xl border border-gray-700 focus:border-blue-400 outline-none"
+                />
+              </div>
+
+              {/* Selector de Color / Fondo del 5 de Oro */}
+              <div className="flex flex-col gap-2.5 bg-gray-950/80 p-4 rounded-xl border border-gray-800 mt-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-yellow-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-yellow-400" />
+                    Color de Fondo del 5 de Oro
+                  </label>
+                  <span className="text-[11px] text-gray-300 font-bold capitalize">
+                    {(data.cincoDeOro?.tema || 'blue') === 'blue' ? 'Azul Oficial' :
+                     (data.cincoDeOro?.tema || 'blue') === 'gold' ? 'Dorado Millonario' :
+                     (data.cincoDeOro?.tema || 'blue') === 'purple' ? 'Púrpura Fortuna' :
+                     (data.cincoDeOro?.tema || 'blue') === 'emerald' ? 'Verde Esmeralda' :
+                     (data.cincoDeOro?.tema || 'blue') === 'ruby' ? 'Rojo Rubí' : 'Noche Profunda'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-1">
+                  {[
+                    { id: 'blue', label: 'Azul Oficial', bg: 'bg-gradient-to-b from-[#001ae6] to-[#00086b]' },
+                    { id: 'gold', label: 'Dorado', bg: 'bg-gradient-to-b from-[#d97706] to-[#78350f]' },
+                    { id: 'purple', label: 'Púrpura', bg: 'bg-gradient-to-b from-[#6b21a8] to-[#3b0764]' },
+                    { id: 'emerald', label: 'Verde', bg: 'bg-gradient-to-b from-[#047857] to-[#064e3b]' },
+                    { id: 'ruby', label: 'Rojo Rubí', bg: 'bg-gradient-to-b from-[#b91c1c] to-[#450a0a]' },
+                    { id: 'dark', label: 'Noche', bg: 'bg-gradient-to-b from-[#1e293b] to-[#020617]' }
+                  ].map((th) => {
+                    const isSelected = (data.cincoDeOro?.tema || 'blue') === th.id;
+                    return (
+                      <button
+                        key={th.id}
+                        type="button"
+                        onClick={async () => {
+                          const updated = {
+                            ...data,
+                            cincoDeOro: {
+                              ...data.cincoDeOro,
+                              tema: th.id
+                            }
+                          };
+                          setData(updated);
+                          await handleSave(updated);
+                        }}
+                        className={`relative flex flex-col items-center justify-center py-3 px-1 rounded-xl border-2 transition-all shadow-md ${th.bg} ${
+                          isSelected
+                            ? 'border-yellow-400 ring-2 ring-yellow-400/50 scale-105 shadow-yellow-500/20'
+                            : 'border-white/20 hover:border-white/50 opacity-75 hover:opacity-100'
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="absolute top-1 right-1 bg-yellow-400 text-black rounded-full p-0.5 shadow">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          </div>
+                        )}
+                        <span className="text-[11px] font-black text-white drop-shadow tracking-tight">
+                          {th.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Mini Vista Previa en Vivo */}
+                <div 
+                  className="w-full p-3.5 rounded-xl border border-white/20 text-center shadow-lg transition-all duration-300 mt-1"
+                  style={{ 
+                    background: 
+                      (data.cincoDeOro?.tema === 'gold') ? 'linear-gradient(180deg, #d97706, #78350f)' :
+                      (data.cincoDeOro?.tema === 'purple') ? 'linear-gradient(180deg, #6b21a8, #3b0764)' :
+                      (data.cincoDeOro?.tema === 'emerald') ? 'linear-gradient(180deg, #047857, #064e3b)' :
+                      (data.cincoDeOro?.tema === 'ruby') ? 'linear-gradient(180deg, #b91c1c, #450a0a)' :
+                      (data.cincoDeOro?.tema === 'dark') ? 'linear-gradient(180deg, #0f172a, #020617)' :
+                      'linear-gradient(180deg, #001ae6, #00086b)'
+                  }}
+                >
+                  <span className="text-[10px] font-black uppercase tracking-widest text-yellow-300 block mb-0.5">
+                    VISTA PREVIA DE LOS POZOS EN EL TV
+                  </span>
+                  <span className="text-base sm:text-lg font-black text-white block drop-shadow">
+                    POZO DE ORO: {data.cincoDeOro?.pozoOro || '$ 16.500.000'} | REVANCHA: {data.cincoDeOro?.pozoRevancha || '$ 5.500.000'}
+                  </span>
+                  <span className="text-[11px] font-bold text-white/90 block mt-0.5">
+                    PRÓXIMO: {data.cincoDeOro?.proximoSorteo || 'Próximo Sorteo'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -1521,7 +1721,8 @@ export function AdminPanel() {
                 { key: 'tombolaVespertina', label: 'Tómbola Vespertina', badge: 'Roja' },
                 { key: 'quinielaNocturna', label: 'Quiniela Nocturna', badge: 'Verde' },
                 { key: 'tombolaNocturna', label: 'Tómbola Nocturna', badge: 'Roja' },
-                { key: 'cincoDeOro', label: '5 de Oro (Pozos)', badge: 'Azul' }
+                { key: 'cincoDeOroSorteo', label: '5 de Oro (Sorteo y Bolillas Doradas)', badge: 'Azul/Oro' },
+                { key: 'cincoDeOro', label: '5 de Oro (Pozos Aproximados)', badge: 'Azul' }
               ].map((item) => {
                 const isActive = data.activeScreens?.[item.key] !== false;
                 return (
