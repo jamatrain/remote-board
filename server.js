@@ -34,7 +34,8 @@ function readData() {
         tombolaVespertina: { fecha: '', numeros: Array(20).fill('') },
         quinielaNocturna: { fecha: '', numeros: Array(20).fill('') },
         tombolaNocturna: { fecha: '', numeros: Array(20).fill('') },
-        cincoDeOro: { pozoOro: '$ 0', pozoRevancha: '$ 0', proximoSorteo: '' }
+        cincoDeOro: { pozoOro: '$ 0', pozoRevancha: '$ 0', proximoSorteo: '' },
+        promociones: []
       };
       fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
       fs.writeFileSync(DATA_FILE, JSON.stringify(defaultData, null, 2), 'utf-8');
@@ -67,6 +68,17 @@ function broadcastUpdate(data) {
   });
 }
 
+function broadcastControl(command) {
+  const payload = `data: ${JSON.stringify({ _type: 'control', ...command })}\n\n`;
+  sseClients.forEach(client => {
+    try {
+      client.res.write(payload);
+    } catch (e) {
+      console.error('Error enviando comando SSE:', e);
+    }
+  });
+}
+
 // REST Endpoints
 app.get('/api/data', (req, res) => {
   res.json(readData());
@@ -87,6 +99,13 @@ app.post('/api/data', (req, res) => {
     console.error('Error guardando datos:', err);
     res.status(500).json({ success: false, error: 'Error al guardar los datos' });
   }
+});
+
+// TV Remote Control Command (from iPhone to TV)
+app.post('/api/control', (req, res) => {
+  const { action, slideIndex } = req.body;
+  broadcastControl({ action, slideIndex, timestamp: Date.now() });
+  res.json({ success: true, command: { action, slideIndex } });
 });
 
 // Sync directly from official La Banca API
@@ -155,7 +174,7 @@ setInterval(async () => {
   }
 }, 3 * 60 * 1000);
 
-// Initial sync on server start (with a slight delay)
+// Initial sync on boot
 setTimeout(async () => {
   try {
     const current = readData();

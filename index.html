@@ -9,17 +9,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,600;0,700;0,800;0,900;1,800;1,900&family=Roboto:wght@400;500;700;900&family=Oswald:wght@600;700&display=swap" rel="stylesheet">
     
-    <!-- On-screen error overlay for TV debugging -->
+    <!-- Log errors to console safely without blocking TV screen -->
     <script>
       window.addEventListener('error', function(e) {
-        var el = document.getElementById('debug-tv-error');
-        if (!el) {
-          el = document.createElement('div');
-          el.id = 'debug-tv-error';
-          el.style.cssText = 'position:fixed;bottom:15px;left:15px;right:15px;background:#990000;color:#fff;padding:15px;font-size:20px;font-weight:bold;z-index:999999;border-radius:10px;border:3px solid #ffcc00;';
-          document.body.appendChild(el);
-        }
-        el.innerHTML = '⚠️ Error en TV Browser: ' + (e.message || 'Error desconocido') + '<br><small>' + (e.filename || '') + ':' + (e.lineno || '') + '</small>';
+        console.error('TV Error:', e.message, e.filename, e.lineno);
       });
     </script>
   </head>

@@ -19,7 +19,11 @@ import {
   Trash2,
   ShoppingBag,
   Flame,
-  Tag
+  Tag,
+  SkipForward,
+  SkipBack,
+  Play,
+  Pause
 } from 'lucide-react';
 
 export function AdminPanel() {
@@ -94,6 +98,24 @@ export function AdminPanel() {
       alert('Error de red al consultar La Banca: ' + err.message);
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const [tvControlStatus, setTvControlStatus] = useState(null);
+
+  const sendTvControl = async (action, slideIndex = null) => {
+    try {
+      const res = await fetch('/api/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, slideIndex })
+      });
+      if (res.ok) {
+        setTvControlStatus(action === 'next' ? 'Siguiente enviado' : action === 'prev' ? 'Anterior enviado' : 'Comando enviado');
+        setTimeout(() => setTvControlStatus(null), 1500);
+      }
+    } catch (e) {
+      console.error('Error enviando comando a TV:', e);
     }
   };
 
@@ -281,6 +303,103 @@ export function AdminPanel() {
       {/* Main Container */}
       <main className="flex-1 max-w-xl w-full mx-auto p-4 flex flex-col gap-5">
         
+        {/* CONTROL REMOTO DE TV (Desde el Celular) */}
+        <section className="bg-gradient-to-r from-emerald-950 via-slate-900 to-indigo-950 border-2 border-emerald-500/50 rounded-2xl p-4 shadow-2xl flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-[11px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                CONTROL REMOTO EN VIVO
+              </span>
+              <h2 className="text-base font-black text-white">Cambiar Pantallas en la Tele</h2>
+            </div>
+            {tvControlStatus && (
+              <span className="text-xs bg-emerald-500 text-black font-black px-2.5 py-1 rounded-full animate-bounce">
+                {tvControlStatus}
+              </span>
+            )}
+          </div>
+
+          {/* Botones de acción directa para avanzar / retroceder */}
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => sendTvControl('prev')}
+              className="flex items-center justify-center gap-1.5 py-3 px-3 bg-gray-800 active:bg-gray-700 hover:bg-gray-750 text-white rounded-xl font-black text-sm shadow-md border border-gray-700 transition"
+            >
+              <SkipBack className="w-4 h-4 text-gray-300" />
+              Anterior
+            </button>
+            <button
+              type="button"
+              onClick={() => sendTvControl('togglePause')}
+              className="flex items-center justify-center gap-1.5 py-3 px-3 bg-amber-600 active:bg-amber-700 text-white rounded-xl font-black text-sm shadow-md transition"
+            >
+              <Play className="w-4 h-4 text-white" />
+              Pausar / Play
+            </button>
+            <button
+              type="button"
+              onClick={() => sendTvControl('next')}
+              className="flex items-center justify-center gap-1.5 py-3 px-3 bg-emerald-600 active:bg-emerald-700 text-white rounded-xl font-black text-sm shadow-md transition"
+            >
+              Siguiente
+              <SkipForward className="w-4 h-4 text-white" />
+            </button>
+          </div>
+
+          {/* Accesos rápidos a sorteos específicos */}
+          <div className="pt-2 border-t border-white/10 flex flex-col gap-1.5">
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+              Mostrar sorteo específico ahora:
+            </span>
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+              <button
+                type="button"
+                onClick={() => sendTvControl('goto', 0)}
+                className="px-2.5 py-1.5 bg-gray-800 hover:bg-gray-700 active:bg-emerald-600 text-xs font-bold text-gray-200 rounded-lg whitespace-nowrap border border-gray-700 shadow-sm"
+              >
+                Quiniela Vesp
+              </button>
+              <button
+                type="button"
+                onClick={() => sendTvControl('goto', 1)}
+                className="px-2.5 py-1.5 bg-gray-800 hover:bg-gray-700 active:bg-red-600 text-xs font-bold text-gray-200 rounded-lg whitespace-nowrap border border-gray-700 shadow-sm"
+              >
+                Tómbola Vesp
+              </button>
+              <button
+                type="button"
+                onClick={() => sendTvControl('goto', 2)}
+                className="px-2.5 py-1.5 bg-gray-800 hover:bg-gray-700 active:bg-emerald-600 text-xs font-bold text-gray-200 rounded-lg whitespace-nowrap border border-gray-700 shadow-sm"
+              >
+                Quiniela Noct
+              </button>
+              <button
+                type="button"
+                onClick={() => sendTvControl('goto', 3)}
+                className="px-2.5 py-1.5 bg-gray-800 hover:bg-gray-700 active:bg-red-600 text-xs font-bold text-gray-200 rounded-lg whitespace-nowrap border border-gray-700 shadow-sm"
+              >
+                Tómbola Noct
+              </button>
+              <button
+                type="button"
+                onClick={() => sendTvControl('goto', 4)}
+                className="px-2.5 py-1.5 bg-gray-800 hover:bg-gray-700 active:bg-blue-600 text-xs font-bold text-gray-200 rounded-lg whitespace-nowrap border border-gray-700 shadow-sm"
+              >
+                5 de Oro
+              </button>
+              <button
+                type="button"
+                onClick={() => sendTvControl('goto', 5)}
+                className="px-2.5 py-1.5 bg-yellow-500 hover:bg-yellow-400 active:bg-yellow-600 text-xs font-black text-black rounded-lg whitespace-nowrap shadow-sm"
+              >
+                ★ Ofertas Kiosko
+              </button>
+            </div>
+          </div>
+        </section>
+
         {/* LA BANCA LIVE SYNC CARD */}
         <section className="bg-gradient-to-r from-blue-950 via-indigo-950 to-slate-900 border border-blue-600/40 rounded-2xl p-4 shadow-xl flex flex-col gap-3">
           <div className="flex items-center justify-between">

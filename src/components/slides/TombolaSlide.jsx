@@ -3,7 +3,6 @@ import { TombolaLogo } from '../common/Logos';
 import { OfficialFooter } from '../common/OfficialFooter';
 
 export function TombolaSlide({ turno = 'VESPERTINA', fecha = '19/11/26', numeros = [] }) {
-  // Ensure we have 20 items padded
   const rawBalls = Array.from({ length: 20 }, (_, idx) => numeros[idx] || '--');
 
   // Map 20 sorted numbers into 4 rows of 5 columns (sorted vertically column-by-column as La Banca does)
@@ -15,15 +14,15 @@ export function TombolaSlide({ turno = 'VESPERTINA', fecha = '19/11/26', numeros
   });
 
   return (
-    <div className="w-full h-full relative overflow-hidden flex bg-gradient-to-br from-[#d4141d] via-[#b80d15] to-[#8f050c] text-white select-none">
+    <div className="w-full h-full relative overflow-hidden flex flex-row bg-gradient-to-br from-[#d4141d] via-[#b80d15] to-[#8f050c] text-white select-none">
       
-      {/* LEFT SECTION: 33% width */}
-      <div className="w-[33%] h-full flex flex-col justify-between p-6 sm:p-8 border-r border-white/20 shadow-2xl z-10 flex-shrink-0">
+      {/* LEFT SECTION: 28% width */}
+      <div className="w-[28%] h-full flex flex-col justify-between p-5 border-r border-white/20 shadow-2xl flex-shrink-0">
         <div className="flex flex-col items-start gap-4">
           <TombolaLogo />
 
           {/* Turno badge */}
-          <div className="w-full max-w-[260px] bg-white text-[#d4141d] rounded-lg py-1 px-4 shadow-xl text-center">
+          <div className="w-full max-w-[240px] bg-white text-[#d4141d] rounded-lg py-1 px-4 shadow-xl text-center">
             <span className="text-2xl sm:text-3xl font-black tracking-widest uppercase">
               {turno}
             </span>
@@ -31,7 +30,7 @@ export function TombolaSlide({ turno = 'VESPERTINA', fecha = '19/11/26', numeros
 
           {/* Sorteo Del & Fecha */}
           <div className="flex flex-col mt-2">
-            <span className="text-xs sm:text-sm font-bold text-white/90 tracking-widest uppercase text-shadow-sm">
+            <span className="text-xs font-bold text-white/90 tracking-widest uppercase text-shadow-sm">
               SORTEO DEL
             </span>
             <span className="text-3xl sm:text-4xl font-black text-white tracking-wider text-shadow-lg">
@@ -41,25 +40,28 @@ export function TombolaSlide({ turno = 'VESPERTINA', fecha = '19/11/26', numeros
         </div>
 
         {/* Legal Footer */}
-        <div className="w-full border-t border-white/20 pt-3">
+        <div className="w-full border-t border-white/20 pt-2">
           <OfficialFooter />
         </div>
       </div>
 
-      {/* RIGHT SECTION: 67% width - 4 ROWS of 5 BALLS using Pure Flexbox */}
-      <div className="w-[67%] h-full flex flex-col justify-around p-4 sm:p-6 z-10">
-        {rows.map((row, rIdx) => (
-          <div key={rIdx} className="w-full flex flex-row items-center justify-around">
-            {row.map((ballNum, cIdx) => (
-              <div
-                key={cIdx}
-                className="lottery-ball w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 text-2xl sm:text-3xl md:text-4xl font-black rounded-full flex items-center justify-center shadow-lg"
-              >
-                {ballNum}
-              </div>
+      {/* RIGHT SECTION: 72% width - 4 ROWS of 5 BALLS in a Table to fit 100% on screen */}
+      <div className="w-[72%] h-full flex items-center justify-center p-2 sm:p-4">
+        <table className="w-full h-[84%] max-h-[580px] border-collapse">
+          <tbody>
+            {rows.map((row, rIdx) => (
+              <tr key={rIdx}>
+                {row.map((ballNum, cIdx) => (
+                  <td key={cIdx} align="center" valign="middle" className="p-1 sm:p-1.5">
+                    <div className="lottery-ball w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 text-xl sm:text-2xl md:text-3xl font-black rounded-full flex items-center justify-center shadow-md">
+                      {ballNum}
+                    </div>
+                  </td>
+                ))}
+              </tr>
             ))}
-          </div>
-        ))}
+          </tbody>
+        </table>
       </div>
 
     </div>

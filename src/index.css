@@ -59,81 +59,55 @@
   text-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
 }
 
-/* Custom Animation Keyframes for Kiosko Belvedere Signage */
-@keyframes spinSlow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes floatPrice {
+/* High-performance, TV-optimized CSS Animations */
+@keyframes tvPulsePrice {
   0%, 100% {
-    transform: translateY(0px) rotate(-2deg) scale(1);
-  }
-  50% {
-    transform: translateY(-14px) rotate(1deg) scale(1.04);
-  }
-}
-
-@keyframes shimmerEffect {
-  0% {
-    transform: translateX(-150%) skewX(-20deg);
-  }
-  100% {
-    transform: translateX(250%) skewX(-20deg);
-  }
-}
-
-@keyframes pulseGlow {
-  0%, 100% {
-    filter: drop-shadow(0 0 15px rgba(250, 204, 21, 0.6));
     transform: scale(1);
   }
   50% {
-    filter: drop-shadow(0 0 35px rgba(250, 204, 21, 1));
-    transform: scale(1.06);
+    transform: scale(1.03);
   }
 }
 
-@keyframes marqueeScroll {
+@keyframes tvMarquee {
   0% {
-    transform: translateX(0%);
+    transform: translate3d(0, 0, 0);
   }
   100% {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
 }
 
-.animate-spin-slow {
-  animation: spinSlow 35s linear infinite;
+@keyframes tvGlow {
+  0%, 100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .animate-float-price {
-  animation: floatPrice 4s ease-in-out infinite;
-}
-
-.animate-shimmer {
-  animation: shimmerEffect 2.8s infinite;
+  animation: tvPulsePrice 2.5s ease-in-out infinite;
+  will-change: transform;
 }
 
 .animate-pulse-glow {
-  animation: pulseGlow 2.5s ease-in-out infinite;
+  animation: tvGlow 2s ease-in-out infinite;
 }
 
 .animate-marquee {
   display: flex;
   width: 200%;
-  animation: marqueeScroll 20s linear infinite;
+  animation: tvMarquee 25s linear infinite;
+  will-change: transform;
 }
 
-/* Sunburst background effect */
-.sunburst-rays {
-  background: repeating-conic-gradient(
+/* Static, high-performance retail sunburst pattern */
+.sunburst-pattern {
+  background-image: repeating-conic-gradient(
     from 0deg,
-    rgba(255, 255, 255, 0.08) 0deg 15deg,
+    rgba(255, 255, 255, 0.05) 0deg 15deg,
     transparent 15deg 30deg
   );
 }

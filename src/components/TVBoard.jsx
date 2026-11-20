@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { TombolaSlide } from './slides/TombolaSlide';
 import { QuinielaSlide } from './slides/QuinielaSlide';
 import { CincoDeOroSlide } from './slides/CincoDeOroSlide';
 import { PromoSlide } from './slides/PromoSlide';
-import { Maximize, Minimize } from 'lucide-react';
+import { Maximize, Minimize, SkipForward, SkipBack, Pause, Play, ChevronRight, ChevronLeft } from 'lucide-react';
 
 export function TVBoard() {
   const [data, setData] = useState(null);
@@ -12,6 +12,8 @@ export function TVBoard() {
   const [progress, setProgress] = useState(0);
   const [connected, setConnected] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const slidesCountRef = useRef(1);
 
   // Load initial data and connect to SSE
   useEffect(() => {
@@ -34,7 +36,7 @@ export function TVBoard() {
 
     fetchData();
 
-    // Connect to Server-Sent Events (SSE) if supported
+    // Connect to Server-Sent Events (SSE)
     const connectSSE = () => {
       if (typeof window === 'undefined' || !('EventSource' in window)) {
         return;
@@ -49,8 +51,32 @@ export function TVBoard() {
 
         eventSource.onmessage = (event) => {
           try {
-            const updated = JSON.parse(event.data);
-            setData(updated);
+            const payload = JSON.parse(event.data);
+            
+            // Check if this is a remote control command from iPhone
+            if (payload && payload._type === 'control') {
+              const count = slidesCountRef.current || 1;
+              if (payload.action === 'next') {
+                setCurrentSlideIndex(prev => (prev + 1) % count);
+                setProgress(0);
+              } else if (payload.action === 'prev') {
+                setCurrentSlideIndex(prev => (prev - 1 + count) % count);
+                setProgress(0);
+              } else if (payload.action === 'pause') {
+                setIsPaused(true);
+              } else if (payload.action === 'resume') {
+                setIsPaused(false);
+              } else if (payload.action === 'togglePause') {
+                setIsPaused(p => !p);
+              } else if (payload.action === 'goto' && typeof payload.slideIndex === 'number') {
+                setCurrentSlideIndex(payload.slideIndex % count);
+                setProgress(0);
+              }
+              return;
+            }
+
+            // Normal data update
+            setData(payload);
             setConnected(true);
           } catch (e) {
             console.error('Error parsing SSE event:', e);
@@ -71,7 +97,7 @@ export function TVBoard() {
 
     connectSSE();
 
-    // Fallback polling every 10 seconds for TV browsers without SSE
+    // Fallback polling
     fallbackInterval = setInterval(fetchData, 10000);
 
     return () => {
@@ -175,6 +201,8 @@ export function TVBoard() {
     }
   }
 
+  slidesCountRef.current = Math.max(1, slides.length);
+
   const durationSec = (data?.rotationSeconds || 60);
 
   // Rotation Timer
@@ -206,13 +234,55 @@ export function TVBoard() {
     }
   }, [slides.length, currentSlideIndex]);
 
+  // Safe manual navigation controls
+  const handleNext = () => {
+    setCurrentSlideIndex((prev) => (prev + 1) % (slides.length || 1));
+    setProgress(0);
+  };
+
+  const handlePrev = () => {
+    setCurrentSlideIndex((prev) => (prev - 1 + slides.length) % (slides.length || 1));
+    setProgress(0);
+  };
+
+  // 100% resilient cross-browser Fullscreen toggle (never throws)
   const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen().catch(() => {});
-      setIsFullscreen(false);
+    try {
+      const doc = window.document;
+      if (!doc) return;
+      const el = doc.documentElement;
+
+      const isFS = !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement);
+
+      if (!isFS) {
+        const fn = el && (el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen);
+        if (typeof fn === 'function') {
+          try {
+            const res = fn.call(el);
+            if (res && typeof res.catch === 'function') {
+              res.catch(() => {});
+            }
+          } catch (e) {
+            console.warn('Native requestFullscreen caught:', e);
+          }
+        }
+        setIsFullscreen(true);
+      } else {
+        const exitFn = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
+        if (typeof exitFn === 'function') {
+          try {
+            const res = exitFn.call(doc);
+            if (res && typeof res.catch === 'function') {
+              res.catch(() => {});
+            }
+          } catch (e) {
+            console.warn('Native exitFullscreen caught:', e);
+          }
+        }
+        setIsFullscreen(false);
+      }
+    } catch (e) {
+      console.warn('Fullscreen toggle failed safely:', e);
     }
   };
 
@@ -220,11 +290,9 @@ export function TVBoard() {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowRight') {
-        setCurrentSlideIndex((prev) => (prev + 1) % (slides.length || 1));
-        setProgress(0);
+        handleNext();
       } else if (e.key === 'ArrowLeft') {
-        setCurrentSlideIndex((prev) => (prev - 1 + slides.length) % (slides.length || 1));
-        setProgress(0);
+        handlePrev();
       } else if (e.key === ' ') {
         e.preventDefault();
         setIsPaused((p) => !p);
@@ -260,10 +328,9 @@ export function TVBoard() {
   return (
     <div className="w-screen h-screen bg-black flex items-center justify-center overflow-hidden select-none">
       
-      {/* 100% Full-bleed container without restrictive max-width to avoid black padding */}
       <div className="relative w-full h-full flex flex-col overflow-hidden">
         
-        {/* Subtle Progress Bar on top */}
+        {/* Subtle Progress Bar on top showing countdown to next slide */}
         {slides.length > 1 && (
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-black/40 z-50">
             <div
@@ -273,22 +340,72 @@ export function TVBoard() {
           </div>
         )}
 
-        {/* Floating Quick Controls (Fullscreen button for TV) */}
-        <div className="absolute top-3 right-3 z-50 flex items-center gap-2">
+        {/* Floating Quick On-Screen TV Controls */}
+        <div className="absolute top-3 right-3 z-50 flex items-center gap-2 bg-black/80 px-3 py-1.5 rounded-xl border border-white/25 shadow-2xl">
           {(!connected || isPaused) && (
-            <div className="bg-black/80 px-3 py-1 rounded-full text-xs font-bold text-amber-400 border border-amber-400/40">
-              {!connected ? '⚠️ Sin conexión' : '⏸ Pausado'}
-            </div>
+            <span className="text-[11px] font-black text-amber-400 mr-1 uppercase">
+              {!connected ? '⚠️ Desconectado' : '⏸ Pausado'}
+            </span>
           )}
 
+          <span className="text-xs font-mono font-bold text-gray-300 mr-1">
+            {currentSlideIndex + 1}/{slides.length}
+          </span>
+
+          {/* Botón manual Anterior */}
+          <button
+            onClick={handlePrev}
+            className="p-1.5 hover:bg-white/20 active:bg-white/30 text-white rounded-lg transition"
+            title="Pantalla Anterior"
+          >
+            <SkipBack className="w-4 h-4" />
+          </button>
+
+          {/* Botón manual Pausar / Reanudar */}
+          <button
+            onClick={() => setIsPaused(p => !p)}
+            className="p-1.5 hover:bg-white/20 active:bg-white/30 text-yellow-400 rounded-lg transition"
+            title={isPaused ? "Reanudar giro automático" : "Pausar giro"}
+          >
+            {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+          </button>
+
+          {/* Botón manual Siguiente */}
+          <button
+            onClick={handleNext}
+            className="flex items-center gap-1 py-1 px-2.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-lg text-xs font-black shadow transition"
+            title="Siguiente Pantalla"
+          >
+            <span>Siguiente</span>
+            <SkipForward className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Botón Pantalla Completa seguro */}
           <button
             onClick={toggleFullscreen}
-            className="p-2 bg-black/60 hover:bg-black/90 text-white rounded-xl backdrop-blur-sm border border-white/20 transition shadow-lg"
+            className="p-1.5 hover:bg-white/20 active:bg-white/30 text-cyan-300 rounded-lg transition ml-1"
             title="Pantalla Completa"
           >
             {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
           </button>
         </div>
+
+        {/* Big On-Screen Next/Prev Arrows for easy mouse/remote click */}
+        <button
+          onClick={handleNext}
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-40 p-2.5 bg-black/40 hover:bg-black/80 active:scale-95 text-yellow-300 rounded-full border border-yellow-400/50 shadow-xl transition"
+          title="Avanzar a la siguiente pantalla"
+        >
+          <ChevronRight className="w-7 h-7" />
+        </button>
+
+        <button
+          onClick={handlePrev}
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-40 p-2.5 bg-black/40 hover:bg-black/80 active:scale-95 text-yellow-300 rounded-full border border-yellow-400/50 shadow-xl transition"
+          title="Volver a la pantalla anterior"
+        >
+          <ChevronLeft className="w-7 h-7" />
+        </button>
 
         {/* Current Active Slide */}
         <div key={activeSlide.id} className="w-full h-full">
