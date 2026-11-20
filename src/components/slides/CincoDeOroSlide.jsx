@@ -79,12 +79,13 @@ export function CincoDeOroSlide({
       </div>
 
       {/* BOTTOM: Próximo Sorteo & Footer */}
-      <div className="w-full flex flex-col items-center gap-4 z-10">
-        <div className="flex flex-col items-center text-center">
-          <span className="text-base sm:text-xl font-bold tracking-widest text-white/90 uppercase">
+      <div className="w-full flex flex-col items-center gap-3 z-10">
+        <div className="flex flex-col items-center text-center bg-black/40 border-2 border-yellow-400/40 px-8 py-3 rounded-2xl shadow-2xl backdrop-blur-md">
+          <span className="text-sm sm:text-base font-black tracking-widest text-yellow-300 uppercase drop-shadow flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse shadow-[0_0_6px_#facc15]" />
             PRÓXIMO SORTEO
           </span>
-          <span className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-wide mt-0.5">
+          <span className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-wide mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
             {proximoSorteo || 'Próximamente'}
           </span>
         </div>

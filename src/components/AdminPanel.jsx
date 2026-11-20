@@ -1481,7 +1481,7 @@ export function AdminPanel() {
                   <span className="text-base sm:text-lg font-black text-white block drop-shadow">
                     POZO DE ORO: {data.cincoDeOro?.pozoOro || '$ 16.500.000'} | REVANCHA: {data.cincoDeOro?.pozoRevancha || '$ 5.500.000'}
                   </span>
-                  <span className="text-[11px] font-bold text-white/90 block mt-0.5">
+                  <span className="text-xs font-black text-yellow-300 block mt-1.5 bg-black/50 py-1 px-3 rounded-lg border border-yellow-400/40 shadow">
                     PRÓXIMO: {data.cincoDeOro?.proximoSorteo || 'Próximo Sorteo'}
                   </span>
                 </div>
