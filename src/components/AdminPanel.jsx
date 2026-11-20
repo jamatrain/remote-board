@@ -42,9 +42,30 @@ export function AdminPanel() {
   const [pasteText, setPasteText] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // 4-Digit Security PIN State
-  const [pin, setPin] = useState(() => localStorage.getItem('kb_admin_pin') || '');
-  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('kb_admin_pin'));
+  // 4-Digit Security PIN State (Supports URL query param: ?pin=XXXX and localStorage)
+  const [pin, setPin] = useState(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlPin = urlParams.get('pin');
+      if (urlPin && urlPin.length === 4) {
+        localStorage.setItem('kb_admin_pin', urlPin);
+        return urlPin;
+      }
+      return localStorage.getItem('kb_admin_pin') || '';
+    } catch (e) {
+      return '';
+    }
+  });
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlPin = urlParams.get('pin');
+      if (urlPin && urlPin.length === 4) return true;
+      return !!localStorage.getItem('kb_admin_pin');
+    } catch (e) {
+      return false;
+    }
+  });
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
   const [changePinModalOpen, setChangePinModalOpen] = useState(false);
