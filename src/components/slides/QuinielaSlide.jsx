@@ -15,26 +15,32 @@ export function QuinielaSlide({ turno = 'VESPERTINA', fecha = '19/11/26', numero
   }));
 
   return (
-    <div className="w-full h-full relative overflow-hidden flex flex-row bg-gradient-to-br from-[#009e2e] via-[#007e24] to-[#005518] text-white select-none">
+    <div className="w-full h-full relative overflow-hidden flex flex-row bg-[#009b3a] text-white select-none">
       
-      {/* LEFT SECTION: 28% width */}
-      <div className="w-[28%] h-full flex flex-col justify-between p-5 border-r border-white/20 shadow-2xl flex-shrink-0">
-        <div className="flex flex-col items-start gap-4">
+      {/* LEFT SIDEBAR: 25% width - EXACT REPLICA OF ABITAB/LA BANCA */}
+      <div className="w-[26%] h-full flex flex-col justify-between p-4 sm:p-6 border-r border-white/20 flex-shrink-0">
+        <div className="flex flex-col items-start w-full">
           <QuinielaLogo />
 
-          {/* Turno badge */}
-          <div className="w-full max-w-[240px] bg-white text-[#007e24] rounded-lg py-1 px-4 shadow-xl text-center">
-            <span className="text-2xl sm:text-3xl font-black tracking-widest uppercase">
+          {/* Top Divider */}
+          <div className="w-full h-[2px] bg-white my-3 opacity-90" />
+
+          {/* Turno text: Vespertina / Nocturna (Directly between white lines, exactly as La Banca does) */}
+          <div className="w-full py-1 text-center">
+            <span className="text-2xl sm:text-3xl font-black tracking-widest text-white uppercase drop-shadow-sm">
               {turno}
             </span>
           </div>
 
+          {/* Bottom Divider */}
+          <div className="w-full h-[2px] bg-white my-3 opacity-90" />
+
           {/* Sorteo Del & Fecha */}
           <div className="flex flex-col mt-2">
-            <span className="text-xs font-bold text-white/90 tracking-widest uppercase text-shadow-sm">
+            <span className="text-xs sm:text-sm font-bold text-white/90 tracking-widest uppercase">
               SORTEO DEL
             </span>
-            <span className="text-3xl sm:text-4xl font-black text-white tracking-wider text-shadow-lg">
+            <span className="text-3xl sm:text-4xl font-black text-white tracking-wider drop-shadow-sm mt-0.5">
               {fecha || '--/--/--'}
             </span>
           </div>
@@ -46,22 +52,30 @@ export function QuinielaSlide({ turno = 'VESPERTINA', fecha = '19/11/26', numero
         </div>
       </div>
 
-      {/* RIGHT SECTION: 72% width - TWO INDEPENDENT ROCK-SOLID TABLES */}
-      <div className="w-[72%] h-full flex flex-row items-center justify-between p-3 sm:p-5 gap-4 sm:gap-8">
+      {/* RIGHT SECTION: 74% width - DUAL COLUMNS WITH GIANT CRISP NUMBERS ON WHITE PILLS */}
+      <div className="w-[74%] h-full flex flex-row items-center justify-center p-3 sm:p-5 gap-4 sm:gap-8">
         
         {/* Column 1: Pos 01 to 10 */}
-        <div className="w-[48%] h-full flex items-center">
+        <div className="w-[48%] h-full flex items-center justify-center">
           <table className="w-full h-[88%] max-h-[580px] border-collapse">
             <tbody>
               {leftCol.map(item => (
                 <tr key={item.pos}>
-                  {/* Position number: clearly separated, high-contrast gold */}
-                  <td className="w-14 text-right pr-2 font-mono font-black text-xl sm:text-2xl text-yellow-300 whitespace-nowrap">
-                    {item.pos} <span className="text-yellow-400 font-light opacity-60">|</span>
+                  {/* Position number: 01 | in high-visibility bright yellow */}
+                  <td className="w-14 text-right pr-2 whitespace-nowrap align-middle">
+                    <span className="font-mono font-black text-xl sm:text-2xl md:text-3xl text-yellow-300">
+                      {item.pos}
+                    </span>
+                    <span className="font-mono font-light text-xl sm:text-2xl text-white/80 ml-1">
+                      |
+                    </span>
                   </td>
-                  {/* White number pill */}
-                  <td className="py-0.5 sm:py-1">
-                    <div className="w-full bg-white text-gray-950 rounded py-1 px-2 text-center font-mono font-black text-2xl sm:text-3xl tracking-widest shadow-md">
+                  {/* Solid White Box with HUGE Bold Black Number */}
+                  <td className="py-1 px-1 align-middle">
+                    <div 
+                      className="w-full rounded bg-white text-black font-mono font-black text-2xl sm:text-3xl md:text-4xl tracking-widest text-center py-1 sm:py-1.5 shadow-md flex items-center justify-center"
+                      style={{ backgroundColor: '#ffffff', color: '#000000' }}
+                    >
                       {item.num}
                     </div>
                   </td>
@@ -72,16 +86,24 @@ export function QuinielaSlide({ turno = 'VESPERTINA', fecha = '19/11/26', numero
         </div>
 
         {/* Column 2: Pos 11 to 20 */}
-        <div className="w-[48%] h-full flex items-center">
+        <div className="w-[48%] h-full flex items-center justify-center">
           <table className="w-full h-[88%] max-h-[580px] border-collapse">
             <tbody>
               {rightCol.map(item => (
                 <tr key={item.pos}>
-                  <td className="w-14 text-right pr-2 font-mono font-black text-xl sm:text-2xl text-yellow-300 whitespace-nowrap">
-                    {item.pos} <span className="text-yellow-400 font-light opacity-60">|</span>
+                  <td className="w-14 text-right pr-2 whitespace-nowrap align-middle">
+                    <span className="font-mono font-black text-xl sm:text-2xl md:text-3xl text-yellow-300">
+                      {item.pos}
+                    </span>
+                    <span className="font-mono font-light text-xl sm:text-2xl text-white/80 ml-1">
+                      |
+                    </span>
                   </td>
-                  <td className="py-0.5 sm:py-1">
-                    <div className="w-full bg-white text-gray-950 rounded py-1 px-2 text-center font-mono font-black text-2xl sm:text-3xl tracking-widest shadow-md">
+                  <td className="py-1 px-1 align-middle">
+                    <div 
+                      className="w-full rounded bg-white text-black font-mono font-black text-2xl sm:text-3xl md:text-4xl tracking-widest text-center py-1 sm:py-1.5 shadow-md flex items-center justify-center"
+                      style={{ backgroundColor: '#ffffff', color: '#000000' }}
+                    >
                       {item.num}
                     </div>
                   </td>

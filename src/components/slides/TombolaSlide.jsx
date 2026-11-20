@@ -14,26 +14,32 @@ export function TombolaSlide({ turno = 'VESPERTINA', fecha = '19/11/26', numeros
   });
 
   return (
-    <div className="w-full h-full relative overflow-hidden flex flex-row bg-gradient-to-br from-[#d4141d] via-[#b80d15] to-[#8f050c] text-white select-none">
+    <div className="w-full h-full relative overflow-hidden flex flex-row bg-[#e10613] text-white select-none">
       
-      {/* LEFT SECTION: 28% width */}
-      <div className="w-[28%] h-full flex flex-col justify-between p-5 border-r border-white/20 shadow-2xl flex-shrink-0">
-        <div className="flex flex-col items-start gap-4">
+      {/* LEFT SIDEBAR: 26% width - EXACT REPLICA OF ABITAB/LA BANCA */}
+      <div className="w-[26%] h-full flex flex-col justify-between p-4 sm:p-6 border-r border-white/20 flex-shrink-0">
+        <div className="flex flex-col items-start w-full">
           <TombolaLogo />
 
-          {/* Turno badge */}
-          <div className="w-full max-w-[240px] bg-white text-[#d4141d] rounded-lg py-1 px-4 shadow-xl text-center">
-            <span className="text-2xl sm:text-3xl font-black tracking-widest uppercase">
+          {/* Top Divider */}
+          <div className="w-full h-[2px] bg-white my-3 opacity-90" />
+
+          {/* Turno text: Vespertina / Nocturna between white lines */}
+          <div className="w-full py-1 text-center">
+            <span className="text-2xl sm:text-3xl font-black tracking-widest text-white uppercase drop-shadow-sm">
               {turno}
             </span>
           </div>
 
+          {/* Bottom Divider */}
+          <div className="w-full h-[2px] bg-white my-3 opacity-90" />
+
           {/* Sorteo Del & Fecha */}
           <div className="flex flex-col mt-2">
-            <span className="text-xs font-bold text-white/90 tracking-widest uppercase text-shadow-sm">
+            <span className="text-xs sm:text-sm font-bold text-white/90 tracking-widest uppercase">
               SORTEO DEL
             </span>
-            <span className="text-3xl sm:text-4xl font-black text-white tracking-wider text-shadow-lg">
+            <span className="text-3xl sm:text-4xl font-black text-white tracking-wider drop-shadow-sm mt-0.5">
               {fecha || '--/--/--'}
             </span>
           </div>
@@ -45,15 +51,15 @@ export function TombolaSlide({ turno = 'VESPERTINA', fecha = '19/11/26', numeros
         </div>
       </div>
 
-      {/* RIGHT SECTION: 72% width - 4 ROWS of 5 BALLS in a Table to fit 100% on screen */}
-      <div className="w-[72%] h-full flex items-center justify-center p-2 sm:p-4">
-        <table className="w-full h-[84%] max-h-[580px] border-collapse">
+      {/* RIGHT SECTION: 74% width - 4 ROWS of 5 BALLS in a Calibrated Table */}
+      <div className="w-[74%] h-full flex items-center justify-center p-2 sm:p-4">
+        <table className="w-full h-[85%] max-h-[580px] border-collapse">
           <tbody>
             {rows.map((row, rIdx) => (
               <tr key={rIdx}>
                 {row.map((ballNum, cIdx) => (
-                  <td key={cIdx} align="center" valign="middle" className="p-1 sm:p-1.5">
-                    <div className="lottery-ball w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 text-xl sm:text-2xl md:text-3xl font-black rounded-full flex items-center justify-center shadow-md">
+                  <td key={cIdx} align="center" valign="middle" className="p-1 sm:p-2">
+                    <div className="lottery-ball w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 text-2xl sm:text-3xl md:text-4xl font-mono font-black text-black rounded-full flex items-center justify-center shadow-lg">
                       {ballNum}
                     </div>
                   </td>
