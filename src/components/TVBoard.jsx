@@ -6,7 +6,16 @@ import { PromoSlide } from './slides/PromoSlide';
 import { Maximize, Minimize, SkipForward, SkipBack, Pause, Play, ChevronRight, ChevronLeft } from 'lucide-react';
 
 export function TVBoard() {
-  const [data, setData] = useState(null);
+  // Load initially from offline cache so TV never starts blank without internet
+  const [data, setData] = useState(() => {
+    try {
+      const cached = localStorage.getItem('kb_tv_offline_data');
+      return cached ? JSON.parse(cached) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -14,6 +23,17 @@ export function TVBoard() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const slidesCountRef = useRef(1);
+
+  // Helper to persist data to localStorage
+  const updateDataWithCache = (newData) => {
+    if (!newData) return;
+    setData(newData);
+    try {
+      localStorage.setItem('kb_tv_offline_data', JSON.stringify(newData));
+    } catch (e) {
+      console.warn('Error saving offline cache:', e);
+    }
+  };
 
   // Load initial data and connect to SSE
   useEffect(() => {
@@ -25,16 +45,29 @@ export function TVBoard() {
         const res = await fetch('/api/data');
         if (res.ok) {
           const json = await res.json();
-          setData(json);
+          updateDataWithCache(json);
           setConnected(true);
         }
       } catch (err) {
-        console.error('Error fetching data:', err);
         setConnected(false);
       }
     };
 
     fetchData();
+
+    // Re-fetch immediately when network is reconnected (e.g. hotspot turned on)
+    const handleOnline = () => {
+      setConnected(true);
+      fetchData();
+      connectSSE();
+    };
+
+    const handleOffline = () => {
+      setConnected(false);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
     // Connect to Server-Sent Events (SSE)
     const connectSSE = () => {
@@ -43,6 +76,7 @@ export function TVBoard() {
       }
 
       try {
+        if (eventSource) eventSource.close();
         eventSource = new EventSource('/api/events');
 
         eventSource.onopen = () => {
@@ -75,8 +109,8 @@ export function TVBoard() {
               return;
             }
 
-            // Normal data update
-            setData(payload);
+            // Normal data update: save to cache and update state
+            updateDataWithCache(payload);
             setConnected(true);
           } catch (e) {
             console.error('Error parsing SSE event:', e);
@@ -88,7 +122,7 @@ export function TVBoard() {
           if (eventSource) {
             eventSource.close();
           }
-          setTimeout(connectSSE, 5000);
+          setTimeout(connectSSE, 10000);
         };
       } catch (e) {
         console.warn('Error iniciando EventSource:', e);
@@ -97,12 +131,14 @@ export function TVBoard() {
 
     connectSSE();
 
-    // Fallback polling
-    fallbackInterval = setInterval(fetchData, 10000);
+    // Fallback polling (tries every 15s when offline/online)
+    fallbackInterval = setInterval(fetchData, 15000);
 
     return () => {
       if (eventSource) eventSource.close();
       if (fallbackInterval) clearInterval(fallbackInterval);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
   }, []);
 
@@ -344,7 +380,7 @@ export function TVBoard() {
         <div className="absolute top-3 right-3 z-50 flex items-center gap-2 bg-black/85 px-3 py-1.5 rounded-xl border border-white/30 shadow-2xl">
           {(!connected || isPaused) && (
             <span className="text-[11px] font-black text-amber-400 mr-1 uppercase">
-              {!connected ? '⚠️ Desconectado' : '⏸ Pausado'}
+              {!connected ? '📶 Modo Autónomo' : '⏸ Pausado'}
             </span>
           )}
 
