@@ -7,63 +7,88 @@ export function PromoSlide({ promo = {} }) {
     titulo = '¡Aprovechá Nuestras Promos!',
     subtitulo = 'Los mejores precios del barrio',
     precio = '',
-    nota = 'Hasta agotar stock',
-    tema = 'orange'
+    nota = 'Hasta agotar stock | Kiosko Belvedere',
+    tema = 'purple'
   } = promo;
 
-  // Ultra-vibrant, high-energy retail color themes (Bright, eye-catching, zero dark tones)
+  // Saturated, high-impact retail themes (Pure vibrancy, bright text, ZERO dark or muddy colors)
   const themes = {
+    purple: {
+      bg: 'from-[#580cb8] via-[#791ef0] to-[#360475]',
+      accent: '#ffea00',
+      tagBg: 'bg-[#ffea00] text-black border-white',
+      priceCard: 'bg-[#ffea00] text-black border-white shadow-[0_0_35px_rgba(255,234,0,0.7)]',
+      priceText: 'text-black',
+      titleColor: 'text-white'
+    },
     orange: {
-      bg: 'from-[#ff3b00] via-[#ff6600] to-[#e62600]',
-      badgeBg: 'bg-yellow-300 text-black border-white',
-      priceBg: 'bg-yellow-300 text-black border-white',
-      accentColor: '#ffea00'
+      bg: 'from-[#e63600] via-[#ff5500] to-[#8f1900]',
+      accent: '#ffea00',
+      tagBg: 'bg-[#ffea00] text-black border-white',
+      priceCard: 'bg-[#ffea00] text-black border-white shadow-[0_0_35px_rgba(255,234,0,0.7)]',
+      priceText: 'text-black',
+      titleColor: 'text-white'
     },
     yellow: {
-      bg: 'from-[#ff9900] via-[#ffcc00] to-[#e68800]',
-      badgeBg: 'bg-black text-yellow-300 border-white',
-      priceBg: 'bg-red-600 text-white border-yellow-300',
-      accentColor: '#ffffff'
-    },
-    purple: {
-      bg: 'from-[#7928ca] via-[#9333ea] to-[#581c87]',
-      badgeBg: 'bg-yellow-300 text-black border-white',
-      priceBg: 'bg-yellow-300 text-black border-white',
-      accentColor: '#f43f5e'
+      bg: 'from-[#cc7000] via-[#ff9900] to-[#804600]',
+      accent: '#ffffff',
+      tagBg: 'bg-black text-yellow-300 border-white',
+      priceCard: 'bg-red-600 text-white border-yellow-300 shadow-[0_0_35px_rgba(220,38,38,0.8)]',
+      priceText: 'text-white',
+      titleColor: 'text-white'
     },
     red: {
-      bg: 'from-[#e10613] via-[#ff1a2b] to-[#b3000d]',
-      badgeBg: 'bg-yellow-300 text-black border-white',
-      priceBg: 'bg-yellow-300 text-black border-white',
-      accentColor: '#ffea00'
+      bg: 'from-[#c90016] via-[#f0132b] to-[#7a000a]',
+      accent: '#ffea00',
+      tagBg: 'bg-[#ffea00] text-black border-white',
+      priceCard: 'bg-[#ffea00] text-black border-white shadow-[0_0_35px_rgba(255,234,0,0.8)]',
+      priceText: 'text-black',
+      titleColor: 'text-white'
     },
     blue: {
-      bg: 'from-[#0055ff] via-[#0088ff] to-[#003cd6]',
-      badgeBg: 'bg-yellow-300 text-black border-white',
-      priceBg: 'bg-yellow-300 text-black border-white',
-      accentColor: '#00ffff'
+      bg: 'from-[#0040cc] via-[#0066ff] to-[#002273]',
+      accent: '#00ffff',
+      tagBg: 'bg-[#ffea00] text-black border-white',
+      priceCard: 'bg-[#ffea00] text-black border-white shadow-[0_0_35px_rgba(255,234,0,0.7)]',
+      priceText: 'text-black',
+      titleColor: 'text-white'
     },
     emerald: {
-      bg: 'from-[#009b4d] via-[#00c862] to-[#007a3d]',
-      badgeBg: 'bg-yellow-300 text-black border-white',
-      priceBg: 'bg-yellow-300 text-black border-white',
-      accentColor: '#ffea00'
+      bg: 'from-[#00853e] via-[#00b354] to-[#004f24]',
+      accent: '#ffea00',
+      tagBg: 'bg-[#ffea00] text-black border-white',
+      priceCard: 'bg-[#ffea00] text-black border-white shadow-[0_0_35px_rgba(255,234,0,0.7)]',
+      priceText: 'text-black',
+      titleColor: 'text-white'
     }
   };
 
-  const currentTheme = themes[tema] || themes.orange;
+  const currentTheme = themes[tema] || themes.purple;
 
   return (
     <div className={`w-full h-full relative overflow-hidden flex flex-col justify-between p-4 sm:p-7 bg-gradient-to-br ${currentTheme.bg} text-white select-none`}>
       
-      {/* Background static sunburst pattern */}
-      <div className="absolute inset-0 sunburst-pattern opacity-20 pointer-events-none" />
+      {/* 1. HIGH-ENERGY LIGHTWEIGHT SVG SUNBURST (Smooth 60 FPS, GPU-accelerated) */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+        <svg viewBox="0 0 200 200" className="w-[180vh] h-[180vh] animate-spin-slow">
+          <g fill="#ffffff">
+            <polygon points="100,100 85,0 115,0" />
+            <polygon points="100,100 170,30 185,55" />
+            <polygon points="100,100 200,85 200,115" />
+            <polygon points="100,100 170,170 145,185" />
+            <polygon points="100,100 85,200 115,200" />
+            <polygon points="100,100 30,170 15,145" />
+            <polygon points="100,100 0,85 0,115" />
+            <polygon points="100,100 30,30 55,15" />
+          </g>
+        </svg>
+      </div>
 
-      {/* TOP BAR: Store Brand (SUPER BRIGHT YELLOW & VISIBLE) & Offer Tag */}
+      {/* TOP HEADER BAR: KIOSKO BELVEDERE & TAG */}
       <div className="w-full flex items-center justify-between z-10 gap-4">
         
-        {/* KIOSKO BELVEDERE - Bright High-Contrast Gold Banner (Impossible to miss!) */}
-        <div className="bg-[#ffea00] text-black px-5 py-2.5 rounded-2xl border-[3px] border-white shadow-[0_6px_20px_rgba(0,0,0,0.4)] flex items-center gap-3">
+        {/* KIOSKO BELVEDERE BRAND BADGE: Bold, Glowing Yellow, 100% Legible */}
+        <div className="bg-[#ffea00] text-black px-6 py-2.5 rounded-2xl border-[3px] border-white shadow-[0_4px_20px_rgba(0,0,0,0.6)] flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center text-yellow-300 shadow flex-shrink-0 animate-bounce">
             <ShoppingBag className="w-6 h-6" />
           </div>
@@ -81,56 +106,56 @@ export function PromoSlide({ promo = {} }) {
 
         {/* Pulsing Offer Tag */}
         {tag && (
-          <div className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-black text-lg sm:text-2xl tracking-widest uppercase border-[3px] shadow-2xl animate-pulse-glow ${currentTheme.badgeBg}`}>
-            <Flame className="w-6 h-6 text-red-600 fill-red-600 animate-pulse" />
+          <div className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-black text-lg sm:text-2xl tracking-widest uppercase border-[3px] shadow-2xl animate-pulse ${currentTheme.tagBg}`}>
+            <Flame className="w-6 h-6 text-red-600 fill-red-600" />
             <span>{tag}</span>
             <Sparkles className="w-6 h-6 text-amber-600 fill-amber-500 animate-spin-slow" />
           </div>
         )}
       </div>
 
-      {/* CENTER: Main Title & Big Pulsing Price Callout */}
-      <div className="w-full max-w-5xl mx-auto my-auto z-10 flex flex-col items-center text-center gap-3 sm:gap-5 py-1">
+      {/* CENTER: Massive Product Title & High-Impact Price Callout */}
+      <div className="w-full max-w-5xl mx-auto my-auto z-10 flex flex-col items-center text-center gap-4 sm:gap-6 py-2">
         
-        {/* Product Title (Bright White with Dark Drop Shadow) */}
-        <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight text-white drop-shadow-[0_6px_14px_rgba(0,0,0,0.9)] uppercase leading-[1.05] max-w-4xl">
+        {/* Product Title: PURE WHITE WITH DEEP BLACK SHADOW (NO BLACK TEXT ON DARK BACKGROUND) */}
+        <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight text-white drop-shadow-[0_8px_16px_rgba(0,0,0,0.95)] uppercase leading-[1.05] max-w-5xl">
           {titulo}
         </h1>
 
-        {/* Subtitle / Description */}
+        {/* Subtitle / Description: HIGH CONTRAST */}
         {subtitulo && (
-          <div className="inline-block bg-black/75 px-7 py-2 rounded-full border-2 border-white/60 shadow-xl">
-            <p className="text-2xl sm:text-4xl font-extrabold text-[#ffea00] tracking-wide">
+          <div className="inline-block bg-black/75 px-8 py-2.5 rounded-full border-2 border-yellow-400 shadow-2xl">
+            <p className="text-2xl sm:text-4xl font-extrabold text-[#ffea00] tracking-wide drop-shadow">
               {subtitulo}
             </p>
           </div>
         )}
 
-        {/* GIANT LIVELY PULSING PRICE CALLOUT */}
+        {/* GIANT HIGH-ENERGY PRICE CALLOUT */}
         {precio && (
           <div className="relative mt-3 animate-float-price">
-            {/* Price Card */}
-            <div className={`px-12 sm:px-16 py-3 sm:py-5 rounded-3xl border-4 shadow-[0_12px_30px_rgba(0,0,0,0.6)] ${currentTheme.priceBg}`}>
-              <span className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tighter leading-none">
+            {/* Glowing Price Card */}
+            <div className={`px-14 sm:px-20 py-4 sm:py-6 rounded-3xl border-4 ${currentTheme.priceCard}`}>
+              <span className={`text-6xl sm:text-8xl md:text-9xl font-black tracking-tighter leading-none ${currentTheme.priceText}`}>
                 {precio}
               </span>
             </div>
 
             {/* Corner Starburst Sticker */}
-            <div className="absolute -top-4 -right-6 bg-red-600 text-white font-black text-xs sm:text-sm px-4 py-1.5 rounded-full uppercase tracking-wider border-2 border-white shadow-xl transform rotate-12">
-              ¡LLEVATELO!
+            <div className="absolute -top-5 -right-6 sm:-right-8 bg-red-600 text-white font-black text-sm sm:text-base px-4 py-1.5 rounded-full uppercase tracking-wider border-2 border-white shadow-2xl transform rotate-12 animate-pulse">
+              💥 ¡LLEVATELO!
             </div>
           </div>
         )}
 
       </div>
 
-      {/* BOTTOM TICKER / MARQUEE (Continuous animated scrolling ribbon) */}
-      <div className="w-full z-10 flex flex-col gap-1.5">
+      {/* BOTTOM TICKER / MARQUEE: Continuous High-Impact Ribbon */}
+      <div className="w-full z-10 flex flex-col gap-2">
         <div className="w-full flex items-center justify-between text-xs sm:text-sm font-black text-white px-2 drop-shadow">
           <span className="flex items-center gap-1.5 text-yellow-300">
             <Tag className="w-4 h-4 fill-yellow-300" />
-            {nota || 'Hasta agotar stock'}
+            {nota || 'Hasta agotar stock | Kiosko Belvedere'}
           </span>
           <span className="text-yellow-300 tracking-wider uppercase font-black">
             ⚡ ¡Consultá en nuestro mostrador!
@@ -138,8 +163,8 @@ export function PromoSlide({ promo = {} }) {
         </div>
 
         {/* Continuous Animated Marquee Banner */}
-        <div className="w-full bg-black/90 border-t-[3px] border-yellow-300 py-2 overflow-hidden rounded-xl shadow-2xl">
-          <div className="animate-marquee whitespace-nowrap text-xs sm:text-sm font-black text-yellow-300 tracking-widest uppercase">
+        <div className="w-full bg-black/95 border-t-[3px] border-yellow-400 py-2.5 overflow-hidden rounded-xl shadow-2xl">
+          <div className="animate-marquee whitespace-nowrap text-sm sm:text-base font-black text-yellow-300 tracking-widest uppercase">
             <span className="mx-6 text-white">🔥 KIOSKO BELVEDERE</span>
             <span className="mx-6 text-yellow-400">★</span>
             <span className="mx-6 text-white">BEBIDAS BIEN FRÍAS ❄️</span>
@@ -152,7 +177,7 @@ export function PromoSlide({ promo = {} }) {
             <span className="mx-6 text-yellow-400">★</span>
             <span className="mx-6 text-white">¡LOS MEJORES PRECIOS DEL BARRIO!</span>
             <span className="mx-6 text-yellow-400">★</span>
-            {/* Loop copy */}
+            {/* Seamless loop */}
             <span className="mx-6 text-white">🔥 KIOSKO BELVEDERE</span>
             <span className="mx-6 text-yellow-400">★</span>
             <span className="mx-6 text-white">BEBIDAS BIEN FRÍAS ❄️</span>

@@ -15,7 +15,7 @@ export function QuinielaSlide({ turno = 'VESPERTINA', fecha = '19/11/26', numero
   }));
 
   return (
-    <div className="w-full h-full relative overflow-hidden flex flex-row bg-[#009b3a] text-white select-none">
+    <div className="w-full h-full relative overflow-hidden flex flex-row bg-gradient-to-br from-[#009e2e] via-[#007e24] to-[#005518] text-white select-none">
       
       {/* LEFT SIDEBAR: 25% width - EXACT REPLICA OF ABITAB/LA BANCA */}
       <div className="w-[26%] h-full flex flex-col justify-between p-4 sm:p-6 border-r border-white/20 flex-shrink-0">

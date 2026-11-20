@@ -385,14 +385,14 @@ export function AdminPanel() {
               <button
                 type="button"
                 onClick={() => sendTvControl('goto', 4)}
-                className="px-2.5 py-1.5 bg-gray-800 hover:bg-gray-700 active:bg-blue-600 text-xs font-bold text-gray-200 rounded-lg whitespace-nowrap border border-gray-700 shadow-sm"
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-xs font-black text-white rounded-lg whitespace-nowrap border border-blue-400 shadow-md"
               >
-                5 de Oro
+                🪙 5 de Oro
               </button>
               <button
                 type="button"
                 onClick={() => sendTvControl('goto', 5)}
-                className="px-2.5 py-1.5 bg-yellow-500 hover:bg-yellow-400 active:bg-yellow-600 text-xs font-black text-black rounded-lg whitespace-nowrap shadow-sm"
+                className="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-400 active:bg-yellow-600 text-xs font-black text-black rounded-lg whitespace-nowrap shadow-md"
               >
                 ★ Ofertas Kiosko
               </button>

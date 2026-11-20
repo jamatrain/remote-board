@@ -14,7 +14,7 @@ export function TombolaSlide({ turno = 'VESPERTINA', fecha = '19/11/26', numeros
   });
 
   return (
-    <div className="w-full h-full relative overflow-hidden flex flex-row bg-[#e10613] text-white select-none">
+    <div className="w-full h-full relative overflow-hidden flex flex-row bg-gradient-to-br from-[#d4141d] via-[#b80d15] to-[#8f050c] text-white select-none">
       
       {/* LEFT SIDEBAR: 26% width - EXACT REPLICA OF ABITAB/LA BANCA */}
       <div className="w-[26%] h-full flex flex-col justify-between p-4 sm:p-6 border-r border-white/20 flex-shrink-0">

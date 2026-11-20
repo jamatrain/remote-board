@@ -341,15 +341,15 @@ export function TVBoard() {
         )}
 
         {/* Floating Quick On-Screen TV Controls */}
-        <div className="absolute top-3 right-3 z-50 flex items-center gap-2 bg-black/80 px-3 py-1.5 rounded-xl border border-white/25 shadow-2xl">
+        <div className="absolute top-3 right-3 z-50 flex items-center gap-2 bg-black/85 px-3 py-1.5 rounded-xl border border-white/30 shadow-2xl">
           {(!connected || isPaused) && (
             <span className="text-[11px] font-black text-amber-400 mr-1 uppercase">
               {!connected ? '⚠️ Desconectado' : '⏸ Pausado'}
             </span>
           )}
 
-          <span className="text-xs font-mono font-bold text-gray-300 mr-1">
-            {currentSlideIndex + 1}/{slides.length}
+          <span className="text-xs font-bold text-yellow-300 mr-1 whitespace-nowrap">
+            {activeSlide.title} ({currentSlideIndex + 1}/{slides.length})
           </span>
 
           {/* Botón manual Anterior */}

@@ -3,11 +3,11 @@ import { OfficialFooter } from '../common/OfficialFooter';
 
 export function CincoDeOroSlide({ pozoOro = '$ 16.500.000', pozoRevancha = '$ 5.500.000', proximoSorteo = 'Lunes 23' }) {
   return (
-    <div className="w-full h-full relative overflow-hidden flex flex-col justify-between p-6 sm:p-10 bg-[#0022cc] text-white select-none">
+    <div className="w-full h-full relative overflow-hidden flex flex-col justify-between p-6 sm:p-10 bg-gradient-to-b from-[#001ae6] via-[#0010a3] to-[#00086b] text-white select-none">
       
-      {/* TOP: "POZOS APROXIMADOS !!!" (Centered, pure white bold) */}
+      {/* TOP: "POZOS APROXIMADOS !!!" (Centered, bright gold bold) */}
       <div className="w-full text-center mt-3 z-10">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-wider uppercase drop-shadow-md">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-yellow-300 tracking-wider uppercase drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
           POZOS APROXIMADOS !!!
         </h1>
       </div>
