@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TombolaSlide } from './slides/TombolaSlide';
 import { QuinielaSlide } from './slides/QuinielaSlide';
 import { CincoDeOroSlide } from './slides/CincoDeOroSlide';
+import { PromoSlide } from './slides/PromoSlide';
 
 export function TVBoard() {
   const [data, setData] = useState(null);
@@ -54,14 +55,12 @@ export function TVBoard() {
         if (eventSource) {
           eventSource.close();
         }
-        // Retry connection after 5 seconds
         setTimeout(connectSSE, 5000);
       };
     };
 
     connectSSE();
 
-    // Safety fallback polling every 30 seconds in case SSE is blocked by proxy/hotspot
     fallbackInterval = setInterval(fetchData, 30000);
 
     return () => {
@@ -70,12 +69,13 @@ export function TVBoard() {
     };
   }, []);
 
-  // Determine active slides from data
+  // Build the list of active slides (Lottery + Kiosko Belvedere Promos)
   const slides = [];
   if (data) {
     const active = data.activeScreens || {};
     const fecha = data.fechaGeneral || '';
 
+    // 1. Quiniela Vespertina
     if (active.quinielaVespertina !== false) {
       slides.push({
         id: 'quinielaVespertina',
@@ -90,6 +90,7 @@ export function TVBoard() {
       });
     }
 
+    // 2. Tómbola Vespertina
     if (active.tombolaVespertina !== false) {
       slides.push({
         id: 'tombolaVespertina',
@@ -104,6 +105,7 @@ export function TVBoard() {
       });
     }
 
+    // 3. Quiniela Nocturna
     if (active.quinielaNocturna !== false) {
       slides.push({
         id: 'quinielaNocturna',
@@ -118,6 +120,7 @@ export function TVBoard() {
       });
     }
 
+    // 4. Tómbola Nocturna
     if (active.tombolaNocturna !== false) {
       slides.push({
         id: 'tombolaNocturna',
@@ -132,6 +135,7 @@ export function TVBoard() {
       });
     }
 
+    // 5. 5 de Oro Pozos
     if (active.cincoDeOro !== false) {
       slides.push({
         id: 'cincoDeOro',
@@ -145,11 +149,25 @@ export function TVBoard() {
         )
       });
     }
+
+    // 6. Dynamic Promotional Slides for "Kiosko Belvedere"
+    if (Array.isArray(data.promociones)) {
+      data.promociones.forEach((promo, idx) => {
+        if (promo && promo.active !== false) {
+          slides.push({
+            id: promo.id || `promo-${idx}`,
+            title: `Kiosko: ${promo.titulo || 'Oferta'}`,
+            component: <PromoSlide promo={promo} />
+          });
+        }
+      });
+    }
   }
 
+  // Duration per slide: strict 60 seconds (1 minute) by default
   const durationSec = (data?.rotationSeconds || 60);
 
-  // Rotation Timer
+  // Rotation Timer (rotates every 60 seconds)
   useEffect(() => {
     if (slides.length <= 1 || isPaused) {
       setProgress(0);
@@ -172,14 +190,13 @@ export function TVBoard() {
     return () => clearInterval(timer);
   }, [slides.length, durationSec, isPaused]);
 
-  // Adjust current index if slides array changes
   useEffect(() => {
     if (currentSlideIndex >= slides.length && slides.length > 0) {
       setCurrentSlideIndex(0);
     }
   }, [slides.length, currentSlideIndex]);
 
-  // Keyboard controls for testing or TV remote (Arrows, Space, F)
+  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowRight') {
@@ -217,7 +234,7 @@ export function TVBoard() {
     return (
       <div className="w-screen h-screen bg-gray-900 flex flex-col items-center justify-center text-white p-8 text-center">
         <h2 className="text-3xl font-black text-yellow-400 mb-2">No hay pantallas activas</h2>
-        <p className="text-gray-300">Activa al menos una pantalla desde el panel de control (/admin).</p>
+        <p className="text-gray-300">Activa al menos una pantalla de sorteo o una oferta desde el panel de control (/admin).</p>
       </div>
     );
   }
@@ -226,26 +243,26 @@ export function TVBoard() {
 
   return (
     <div className="w-screen h-screen bg-black flex items-center justify-center overflow-hidden select-none">
-      {/* 16:9 Display Container that fits cleanly on 32" TV */}
+      {/* 16:9 Display Container for 32" TV */}
       <div className="relative w-full h-full max-w-[177.78vh] max-h-[56.25vw] flex flex-col">
         
-        {/* Subtle Progress Bar on top showing rotation countdown */}
+        {/* Subtle Progress Bar on top showing countdown (1 minute per slide) */}
         {slides.length > 1 && (
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-black/40 z-50">
             <div
-              className="h-full bg-yellow-400/80 transition-all duration-200 ease-linear shadow-[0_0_8px_rgba(250,204,21,0.8)]"
+              className="h-full bg-yellow-400/90 transition-all duration-200 ease-linear shadow-[0_0_10px_rgba(250,204,21,0.9)]"
               style={{ width: `${progress}%` }}
             />
           </div>
         )}
 
-        {/* Status Indicator (only shown if connection drops or paused) */}
+        {/* Status Indicator */}
         {(!connected || isPaused) && (
           <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-semibold">
             {!connected && (
               <span className="flex items-center gap-1.5 text-amber-400">
                 <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                Sin conexión - Mostrando datos locales
+                Sin conexión - Datos locales
               </span>
             )}
             {isPaused && (
@@ -254,7 +271,7 @@ export function TVBoard() {
           </div>
         )}
 
-        {/* Current Active Slide with Smooth Fade Transition */}
+        {/* Current Active Slide */}
         <div key={activeSlide.id} className="w-full h-full animate-fadeIn transition-opacity duration-500">
           {activeSlide.component}
         </div>

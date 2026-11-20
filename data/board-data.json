@@ -113,5 +113,17 @@
     "pozoOro": "$ 16.500.000",
     "pozoRevancha": "$ 5.500.000",
     "proximoSorteo": "Lunes 23"
-  }
+  },
+  "promociones": [
+    {
+      "id": "promo-1",
+      "active": true,
+      "tag": "SUPER COMBO",
+      "titulo": "Refresco 600ml + Alfajor Marley",
+      "subtitulo": "¡La combinación perfecta para tu tarde!",
+      "precio": "$ 140",
+      "nota": "Kiosko Belvedere | ¡Vení a buscar el tuyo!",
+      "tema": "orange"
+    }
+  ]
 }

@@ -14,7 +14,12 @@ import {
   Settings,
   RefreshCw,
   Clock,
-  Info
+  Info,
+  Plus,
+  Trash2,
+  ShoppingBag,
+  Flame,
+  Tag
 } from 'lucide-react';
 
 export function AdminPanel() {
@@ -93,7 +98,6 @@ export function AdminPanel() {
   };
 
   const handleNumberChange = (section, index, value, maxLen = 3) => {
-    // Only allow numbers
     const clean = value.replace(/\D/g, '').slice(0, maxLen);
     const updatedNumbers = [...(data[section]?.numeros || Array(20).fill(''))];
     updatedNumbers[index] = clean;
@@ -106,7 +110,6 @@ export function AdminPanel() {
       }
     });
 
-    // Auto-jump to next input when reaching maxLen
     if (clean.length === maxLen && index < 19) {
       const nextKey = `${section}-${index + 1}`;
       if (inputsRef.current[nextKey]) {
@@ -115,14 +118,12 @@ export function AdminPanel() {
     }
   };
 
-  // Generate Tombola numbers from Quiniela (takes last 2 digits, deduplicates & sorts ascending)
   const generateTombolaFromQuiniela = (quinielaKey, tombolaKey) => {
     const quinielaNums = data[quinielaKey]?.numeros || [];
     const extracted = quinielaNums
       .map(n => n ? n.slice(-2).padStart(2, '0') : '')
       .filter(n => n !== '');
 
-    // Get unique sorted numbers
     const unique = Array.from(new Set(extracted)).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
     
     while (unique.length < 20) {
@@ -141,7 +142,6 @@ export function AdminPanel() {
     alert(`¡Tómbola generada con ${extracted.length} terminaciones ordenadas de menor a mayor!`);
   };
 
-  // Sort Tombola numbers ascending
   const sortTombola = (tombolaKey) => {
     const nums = [...(data[tombolaKey]?.numeros || [])];
     const filled = nums.filter(n => n.trim() !== '');
@@ -159,7 +159,6 @@ export function AdminPanel() {
     });
   };
 
-  // Paste / Parse bulk text (e.g. from WhatsApp)
   const handleBulkPaste = () => {
     if (!pasteTarget || !pasteText.trim()) return;
 
@@ -190,12 +189,43 @@ export function AdminPanel() {
     alert(`Se cargaron ${Math.min(matches.length, 20)} números correctamente.`);
   };
 
-  // Currency formatter for 5 de Oro ($ 17.400.000)
   const formatCurrency = (val) => {
     const raw = val.replace(/\D/g, '');
     if (!raw) return '$ 0';
     const num = parseInt(raw, 10);
     return '$ ' + num.toLocaleString('es-UY');
+  };
+
+  // Kiosko Belvedere Promotions management
+  const addPromoSlide = () => {
+    const newPromo = {
+      id: `promo-${Date.now()}`,
+      active: true,
+      tag: 'SUPER PROMO',
+      titulo: 'Nueva Oferta',
+      subtitulo: 'Aprovechá hoy en Kiosko Belvedere',
+      precio: '$ 100',
+      nota: 'Hasta agotar stock | Kiosko Belvedere',
+      tema: 'orange'
+    };
+    setData({
+      ...data,
+      promociones: [...(data.promociones || []), newPromo]
+    });
+  };
+
+  const updatePromoSlide = (index, field, value) => {
+    const list = [...(data.promociones || [])];
+    list[index] = { ...list[index], [field]: value };
+    setData({ ...data, promociones: list });
+  };
+
+  const removePromoSlide = (index) => {
+    if (confirm('¿Seguro que deseas eliminar esta oferta?')) {
+      const list = [...(data.promociones || [])];
+      list.splice(index, 1);
+      setData({ ...data, promociones: list });
+    }
   };
 
   const copyTvLink = () => {
@@ -227,7 +257,6 @@ export function AdminPanel() {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Link to TV */}
           <button
             onClick={copyTvLink}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-yellow-400 rounded-lg text-xs font-bold transition shadow"
@@ -274,7 +303,7 @@ export function AdminPanel() {
           </div>
 
           <p className="text-xs text-gray-300 leading-relaxed">
-            Consulta los resultados oficiales en tiempo real. 
+            Consulta los resultados oficiales. 
             <span className="text-yellow-300 font-semibold ml-1">
               Si los primeros 10 resultados coinciden con lo anterior, no se reenvía a la TV.
             </span>
@@ -317,6 +346,7 @@ export function AdminPanel() {
             { id: 'quinielaNoct', label: 'Quiniela Noct.', color: 'border-emerald-500 text-emerald-400' },
             { id: 'tombolaNoct', label: 'Tómbola Noct.', color: 'border-red-500 text-red-400' },
             { id: 'cincoDeOro', label: '5 de Oro', color: 'border-blue-500 text-blue-400' },
+            { id: 'kiosko', label: '🛍️ Kiosko Belvedere', color: 'border-amber-500 text-amber-400' },
             { id: 'config', label: 'Ajustes TV', color: 'border-yellow-500 text-yellow-400' }
           ].map((tab) => (
             <button
@@ -357,7 +387,6 @@ export function AdminPanel() {
               </button>
             </div>
 
-            {/* Quick Action: Generate Tombola button */}
             <button
               onClick={() => generateTombolaFromQuiniela('quinielaVespertina', 'tombolaVespertina')}
               className="w-full py-2 px-3 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white rounded-xl text-xs font-black tracking-wider flex items-center justify-center gap-2 shadow-md transition"
@@ -366,7 +395,6 @@ export function AdminPanel() {
               COPIAR Y ORDENAR A TÓMBOLA VESPERTINA
             </button>
 
-            {/* 20 Inputs in 2 columns */}
             <div className="grid grid-cols-2 gap-x-4 gap-y-2">
               {Array.from({ length: 20 }, (_, i) => {
                 const pos = String(i + 1).padStart(2, '0');
@@ -573,7 +601,6 @@ export function AdminPanel() {
               <p className="text-xs text-gray-400">Montos y fecha del próximo sorteo oficial</p>
             </div>
 
-            {/* Pozo de Oro */}
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-yellow-400 uppercase tracking-wider">
                 Pozo de Oro ($)
@@ -595,7 +622,6 @@ export function AdminPanel() {
               />
             </div>
 
-            {/* Pozo Revancha */}
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-yellow-400 uppercase tracking-wider">
                 Pozo Revancha ($)
@@ -617,7 +643,6 @@ export function AdminPanel() {
               />
             </div>
 
-            {/* Próximo Sorteo */}
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">
                 Leyenda Próximo Sorteo
@@ -641,7 +666,167 @@ export function AdminPanel() {
           </div>
         )}
 
-        {/* TAB 6: CONFIGURACIÓN / PANTALLAS ACTIVAS */}
+        {/* TAB 6: OFERTAS KIOSKO BELVEDERE */}
+        {activeTab === 'kiosko' && (
+          <div className="bg-gray-900 border border-amber-900/40 rounded-2xl p-4 flex flex-col gap-5 shadow-xl">
+            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+              <div>
+                <h2 className="text-base font-black text-amber-400 uppercase tracking-wide flex items-center gap-2">
+                  <ShoppingBag className="w-5 h-5 text-amber-400" />
+                  Kiosko Belvedere
+                </h2>
+                <p className="text-xs text-gray-400">Pantallas de ofertas y promociones para el TV</p>
+              </div>
+
+              <button
+                onClick={addPromoSlide}
+                className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black text-xs rounded-xl transition shadow"
+              >
+                <Plus className="w-4 h-4" />
+                Nueva Oferta
+              </button>
+            </div>
+
+            {(!data.promociones || data.promociones.length === 0) ? (
+              <div className="p-8 text-center bg-gray-950/60 rounded-xl border border-dashed border-gray-800">
+                <Flame className="w-10 h-10 text-amber-500 mx-auto mb-2 opacity-60" />
+                <p className="text-sm font-bold text-gray-300">No hay ofertas de Kiosko creadas</p>
+                <p className="text-xs text-gray-500 mt-1">Presiona "Nueva Oferta" para agregar productos destacados al ciclo del televisor.</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {data.promociones.map((promo, idx) => (
+                  <div key={promo.id || idx} className="bg-gray-950/80 border border-gray-800 rounded-2xl p-4 flex flex-col gap-3 shadow-md">
+                    {/* Header of each promo item */}
+                    <div className="flex items-center justify-between border-b border-gray-800/80 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 font-mono font-bold text-xs flex items-center justify-center">
+                          {idx + 1}
+                        </span>
+                        <span className="text-xs font-black uppercase text-gray-300">
+                          {promo.titulo || 'Oferta'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {/* Active toggle */}
+                        <button
+                          onClick={() => updatePromoSlide(idx, 'active', !promo.active)}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
+                            promo.active !== false
+                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                              : 'bg-gray-800 text-gray-500 border border-gray-700'
+                          }`}
+                        >
+                          {promo.active !== false ? 'Activa' : 'Pausada'}
+                        </button>
+
+                        {/* Delete button */}
+                        <button
+                          onClick={() => removePromoSlide(idx)}
+                          className="p-1.5 bg-red-950/50 hover:bg-red-900/70 text-red-400 rounded-lg transition"
+                          title="Eliminar oferta"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Inputs */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
+                          Etiqueta (Badge)
+                        </label>
+                        <input
+                          type="text"
+                          value={promo.tag || ''}
+                          onChange={(e) => updatePromoSlide(idx, 'tag', e.target.value)}
+                          placeholder="SUPER PROMO, OFERTA, COMBO"
+                          className="w-full bg-gray-900 text-white text-xs font-bold py-1.5 px-2.5 rounded-lg border border-gray-700 focus:border-amber-400 outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
+                          Tema Visual
+                        </label>
+                        <select
+                          value={promo.tema || 'orange'}
+                          onChange={(e) => updatePromoSlide(idx, 'tema', e.target.value)}
+                          className="w-full bg-gray-900 text-white text-xs font-bold py-1.5 px-2 rounded-lg border border-gray-700 focus:border-amber-400 outline-none"
+                        >
+                          <option value="orange">🔥 Naranja Fuego</option>
+                          <option value="yellow">⭐ Amarillo Impacto</option>
+                          <option value="purple">⚡ Violeta Neón</option>
+                          <option value="red">💥 Rojo Explosivo</option>
+                          <option value="blue">❄️ Azul Real</option>
+                          <option value="emerald">🌿 Verde Fresco</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
+                        Título del Producto (Grande)
+                      </label>
+                      <input
+                        type="text"
+                        value={promo.titulo || ''}
+                        onChange={(e) => updatePromoSlide(idx, 'titulo', e.target.value)}
+                        placeholder="Ej: Coca Cola 600ml + Alfajor Marley"
+                        className="w-full bg-gray-900 text-white font-extrabold text-sm py-2 px-3 rounded-lg border border-gray-700 focus:border-amber-400 outline-none"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
+                          Precio o Combo
+                        </label>
+                        <input
+                          type="text"
+                          value={promo.precio || ''}
+                          onChange={(e) => updatePromoSlide(idx, 'precio', e.target.value)}
+                          placeholder="Ej: $ 140 o 2 x $ 200"
+                          className="w-full bg-gray-900 text-yellow-300 font-mono font-black text-base py-1.5 px-2.5 rounded-lg border border-gray-700 focus:border-amber-400 outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
+                          Detalle / Subtítulo
+                        </label>
+                        <input
+                          type="text"
+                          value={promo.subtitulo || ''}
+                          onChange={(e) => updatePromoSlide(idx, 'subtitulo', e.target.value)}
+                          placeholder="Ej: ¡Ideal para la tarde!"
+                          className="w-full bg-gray-900 text-white text-xs py-1.5 px-2.5 rounded-lg border border-gray-700 focus:border-amber-400 outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
+                        Pie de oferta (Condiciones)
+                      </label>
+                      <input
+                        type="text"
+                        value={promo.nota || ''}
+                        onChange={(e) => updatePromoSlide(idx, 'nota', e.target.value)}
+                        placeholder="Ej: Hasta agotar stock | Kiosko Belvedere"
+                        className="w-full bg-gray-900 text-gray-300 text-xs py-1.5 px-2.5 rounded-lg border border-gray-700 focus:border-amber-400 outline-none"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 7: CONFIGURACIÓN / PANTALLAS ACTIVAS */}
         {activeTab === 'config' && (
           <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 flex flex-col gap-5 shadow-xl">
             <div className="border-b border-gray-800 pb-3">
@@ -656,7 +841,7 @@ export function AdminPanel() {
             <div className="flex items-center justify-between bg-gray-950/60 p-3 rounded-xl border border-gray-800">
               <div>
                 <label className="text-sm font-bold text-white block">Tiempo por pantalla</label>
-                <span className="text-xs text-gray-400">Duración del ciclo en segundos</span>
+                <span className="text-xs text-gray-400">Duración del ciclo (1 minuto = 60 seg)</span>
               </div>
               <div className="flex items-center gap-2">
                 <input
@@ -679,7 +864,7 @@ export function AdminPanel() {
             {/* Toggle individual screens */}
             <div className="flex flex-col gap-2.5">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                Pantallas en el ciclo del TV
+                Pantallas de Lotería en el ciclo del TV
               </span>
 
               {[
@@ -772,7 +957,7 @@ export function AdminPanel() {
               value={pasteText}
               onChange={(e) => setPasteText(e.target.value)}
               placeholder="Ejemplo: 016 362 312 058 682 907 395 838 697 760 282 651..."
-              className="w-full bg-gray-950 text-white font-mono text-sm p-3 rounded-xl border border-gray-700 focus:border-yellow-400 outline-none"
+              className="w-full bg-gray-900 text-white font-mono text-sm p-3 rounded-xl border border-gray-700 focus:border-yellow-400 outline-none"
             />
             <div className="flex gap-2 justify-end">
               <button
