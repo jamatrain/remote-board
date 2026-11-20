@@ -220,15 +220,17 @@ export function TVBoard() {
 
     // 5. 5 de Oro Pozos
     if (active.cincoDeOro !== false) {
+      const cOroTema = data.cincoDeOro?.tema || 'blue';
       slides.push({
-        id: 'cincoDeOro',
+        id: `cincoDeOro-${cOroTema}`,
         title: '5 de Oro',
         component: (
           <CincoDeOroSlide
+            key={`slide-c5oro-${cOroTema}`}
             pozoOro={data.cincoDeOro?.pozoOro}
             pozoRevancha={data.cincoDeOro?.pozoRevancha}
             proximoSorteo={data.cincoDeOro?.proximoSorteo}
-            tema={data.cincoDeOro?.tema || 'blue'}
+            tema={cOroTema}
           />
         )
       });

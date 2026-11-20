@@ -1165,6 +1165,30 @@ export function AdminPanel() {
                   );
                 })}
               </div>
+
+              {/* Mini Vista Previa en Vivo */}
+              <div 
+                className="w-full p-3.5 rounded-xl border border-white/20 text-center shadow-lg transition-all duration-300 mt-1"
+                style={{ 
+                  background: 
+                    (data.cincoDeOro?.tema === 'gold') ? 'linear-gradient(180deg, #d97706, #78350f)' :
+                    (data.cincoDeOro?.tema === 'purple') ? 'linear-gradient(180deg, #6b21a8, #3b0764)' :
+                    (data.cincoDeOro?.tema === 'emerald') ? 'linear-gradient(180deg, #047857, #064e3b)' :
+                    (data.cincoDeOro?.tema === 'ruby') ? 'linear-gradient(180deg, #b91c1c, #450a0a)' :
+                    (data.cincoDeOro?.tema === 'dark') ? 'linear-gradient(180deg, #0f172a, #020617)' :
+                    'linear-gradient(180deg, #001ae6, #00086b)'
+                }}
+              >
+                <span className="text-[10px] font-black uppercase tracking-widest text-yellow-300 block mb-0.5">
+                  VISTA PREVIA DEL COLOR EN EL TV
+                </span>
+                <span className="text-base sm:text-lg font-black text-white block drop-shadow">
+                  POZO DE ORO: {data.cincoDeOro?.pozoOro || '$ 16.500.000'}
+                </span>
+                <span className="text-[11px] font-bold text-white/90 block mt-0.5">
+                  {data.cincoDeOro?.proximoSorteo || 'Próximo Sorteo'}
+                </span>
+              </div>
             </div>
           </div>
         )}

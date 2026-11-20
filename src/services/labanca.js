@@ -164,6 +164,7 @@ export async function syncWithLaBanca(currentData) {
 
       if (pozoOro !== oldOro || pozoRevancha !== oldRev || proximoSorteo !== oldSorteo) {
         updatedData.cincoDeOro = {
+          ...currentData.cincoDeOro,
           pozoOro,
           pozoRevancha,
           proximoSorteo

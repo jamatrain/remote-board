@@ -9,28 +9,28 @@ export function CincoDeOroSlide({
 }) {
   const themes = {
     blue: {
-      class: 'from-[#001ae6] via-[#0010a3] to-[#00086b]',
-      style: 'linear-gradient(to bottom, #001ae6, #0010a3, #00086b)'
+      gradient: 'linear-gradient(180deg, #001ae6 0%, #0010a3 50%, #00086b 100%)',
+      fallback: '#0010a3'
     },
     gold: {
-      class: 'from-[#d97706] via-[#b45309] to-[#78350f]',
-      style: 'linear-gradient(to bottom, #d97706, #b45309, #78350f)'
+      gradient: 'linear-gradient(180deg, #d97706 0%, #b45309 50%, #78350f 100%)',
+      fallback: '#b45309'
     },
     purple: {
-      class: 'from-[#6b21a8] via-[#581c87] to-[#3b0764]',
-      style: 'linear-gradient(to bottom, #6b21a8, #581c87, #3b0764)'
+      gradient: 'linear-gradient(180deg, #6b21a8 0%, #581c87 50%, #3b0764 100%)',
+      fallback: '#581c87'
     },
     emerald: {
-      class: 'from-[#047857] via-[#065f46] to-[#064e3b]',
-      style: 'linear-gradient(to bottom, #047857, #065f46, #064e3b)'
+      gradient: 'linear-gradient(180deg, #047857 0%, #065f46 50%, #064e3b 100%)',
+      fallback: '#065f46'
     },
     dark: {
-      class: 'from-[#0f172a] via-[#1e293b] to-[#020617]',
-      style: 'linear-gradient(to bottom, #0f172a, #1e293b, #020617)'
+      gradient: 'linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #020617 100%)',
+      fallback: '#0f172a'
     },
     ruby: {
-      class: 'from-[#b91c1c] via-[#991b1b] to-[#450a0a]',
-      style: 'linear-gradient(to bottom, #b91c1c, #991b1b, #450a0a)'
+      gradient: 'linear-gradient(180deg, #b91c1c 0%, #991b1b 50%, #450a0a 100%)',
+      fallback: '#991b1b'
     }
   };
 
@@ -38,8 +38,12 @@ export function CincoDeOroSlide({
 
   return (
     <div 
-      className={`w-full h-full relative overflow-hidden flex flex-col justify-between p-6 sm:p-10 bg-gradient-to-b ${selectedTheme.class} text-white select-none`}
-      style={{ background: selectedTheme.style }}
+      key={`c5oro-${tema}`}
+      className="w-full h-full relative overflow-hidden flex flex-col justify-between p-6 sm:p-10 text-white select-none transition-colors duration-500"
+      style={{ 
+        background: selectedTheme.gradient,
+        backgroundColor: selectedTheme.fallback 
+      }}
     >
       
       {/* TOP: "POZOS APROXIMADOS !!!" (Centered, bright gold bold) */}
