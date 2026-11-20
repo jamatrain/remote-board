@@ -1,0 +1,42 @@
+{
+  "name": "remote-board",
+  "version": "1.0.0",
+  "description": "Sistema de cartelería digital remota para resultados de Quiniela, Tómbola y 5 de Oro",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev:server": "node server.js",
+    "dev:client": "vite",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "build": "vite build",
+    "start": "NODE_ENV=production node server.js"
+  },
+  "keywords": [
+    "remote-board",
+    "chromecast",
+    "lottery",
+    "digital-signage",
+    "quiniela",
+    "tombola",
+    "5deoro"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.1",
+    "lucide-react": "^0.460.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "vite": "^5.4.11"
+  }
+}
