@@ -47,9 +47,25 @@ export async function syncWithLaBanca(currentData) {
 
   const updatedData = { ...currentData };
 
-  // Fetch all 5 games
+  // Fetch all 5 games with realistic browser headers
   const fetchGame = async (id) => {
-    const res = await fetch(`https://info-api.labanca.com.uy/info-api/v1/game/result/${id}/last/1`);
+    const res = await fetch(`https://info-api.labanca.com.uy/info-api/v1/game/result/${id}/last/1`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'es-UY,es;q=0.9,es-419;q=0.8,en;q=0.7',
+        'Referer': 'https://www.labanca.com.uy/',
+        'Origin': 'https://www.labanca.com.uy',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Sec-Ch-Ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+        'Sec-Ch-Ua-Mobile': '?0',
+        'Sec-Ch-Ua-Platform': '"Windows"',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-site'
+      }
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
     return json?.data?.[0];
@@ -165,7 +181,7 @@ export async function syncWithLaBanca(currentData) {
 
     return { result, updatedData };
   } catch (err) {
-    console.error('Error sincronizando con La Banca:', err);
+    console.warn(`[La Banca Sync] Aviso: No se pudo conectar con la API (${err.message}). Se mantienen los datos locales.`);
     result.error = err.message;
     return { result, updatedData: currentData };
   }

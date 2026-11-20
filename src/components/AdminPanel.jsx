@@ -216,13 +216,20 @@ export function AdminPanel() {
       }
       const json = await res.json();
       if (json.success) {
-        if (json.data) setData(json.data);
-        setSyncFeedback({
-          updated: json.updated,
-          cooldown: json.cooldown,
-          message: json.message,
-          details: json.details
-        });
+        if (json.error) {
+          setSyncFeedback({
+            updated: false,
+            message: 'La Banca bloqueó la conexión automática desde la nube (' + json.error + '). Podés usar "Pegar Bloque" para cargarlos al instante.'
+          });
+        } else {
+          if (json.data) setData(json.data);
+          setSyncFeedback({
+            updated: json.updated,
+            cooldown: json.cooldown,
+            message: json.message,
+            details: json.details
+          });
+        }
       } else {
         alert('Error al sincronizar sorteos: ' + (json.error || 'Error desconocido'));
       }

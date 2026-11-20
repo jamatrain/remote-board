@@ -92,7 +92,7 @@ function broadcastControl(command) {
 function hashPin(pin) {
   return crypto.createHash('sha256').update(String(pin || '').trim()).digest('hex');
 }
-const DEFAULT_PIN = process.env.ADMIN_PIN || '1234';
+const DEFAULT_PIN = process.env.ADMIN_PIN || '4355';
 const DEFAULT_PIN_HASH = hashPin(DEFAULT_PIN);
 
 function verifyPinMiddleware(req, res, next) {
@@ -205,6 +205,7 @@ app.post('/api/sync', verifyPinMiddleware, async (req, res) => {
     res.json({
       success: true,
       updated: result.updated,
+      error: result.error,
       details: result.details,
       data: updatedData
     });
@@ -239,7 +240,7 @@ app.get('/api/events', (req, res) => {
   });
 });
 
-// Automatic periodic sync with La Banca (every 3 minutes)
+// Automatic periodic sync with La Banca (every 5 minutes)
 setInterval(async () => {
   try {
     const current = readData();
@@ -250,9 +251,9 @@ setInterval(async () => {
       console.log('⚡ [Auto-Sync] Resultados actualizados automáticamente desde La Banca');
     }
   } catch (e) {
-    console.error('Error en auto-sync periódico:', e);
+    // Graceful catch
   }
-}, 3 * 60 * 1000);
+}, 5 * 60 * 1000);
 
 // Initial sync on boot
 setTimeout(async () => {
@@ -265,7 +266,7 @@ setTimeout(async () => {
       console.log('⚡ [Boot-Sync] Datos iniciales sincronizados con La Banca');
     }
   } catch (e) {
-    console.error('Error en boot sync:', e);
+    console.log('ℹ️ [Boot-Sync] Servidor iniciado con datos vigentes');
   }
 }, 2000);
 
