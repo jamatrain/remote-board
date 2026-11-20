@@ -1357,26 +1357,53 @@ export function AdminPanel() {
             </div>
 
             {/* Rotation Duration */}
-            <div className="flex items-center justify-between bg-gray-950/60 p-3 rounded-xl border border-gray-800">
-              <div>
-                <label className="text-sm font-bold text-white block">Tiempo por pantalla</label>
-                <span className="text-xs text-gray-400">Duración del ciclo (1 minuto = 60 seg)</span>
+            <div className="flex flex-col gap-2.5 bg-gray-950/60 p-3.5 rounded-xl border border-gray-800">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-sm font-bold text-white block">Tiempo por pantalla</label>
+                  <span className="text-xs text-gray-400">Duración de cada sorteo o promo en el TV</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="5"
+                    max="300"
+                    value={data.rotationSeconds ?? ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setData({
+                        ...data,
+                        rotationSeconds: val === '' ? '' : parseInt(val, 10)
+                      });
+                    }}
+                    onBlur={() => {
+                      if (!data.rotationSeconds || Number(data.rotationSeconds) < 5) {
+                        setData({ ...data, rotationSeconds: 60 });
+                      }
+                    }}
+                    className="w-16 bg-gray-900 text-yellow-400 font-mono font-bold text-center py-1.5 px-2 rounded-lg border border-gray-700 text-base focus:border-yellow-400 outline-none"
+                  />
+                  <span className="text-xs font-semibold text-gray-400">seg</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="10"
-                  max="300"
-                  value={data.rotationSeconds || 60}
-                  onChange={(e) => {
-                    setData({
-                      ...data,
-                      rotationSeconds: parseInt(e.target.value, 10) || 60
-                    });
-                  }}
-                  className="w-20 bg-gray-900 text-yellow-400 font-mono font-bold text-center py-1.5 px-2 rounded-lg border border-gray-700 text-base"
-                />
-                <span className="text-xs font-semibold text-gray-400">seg</span>
+
+              {/* Botones de acceso rápido para segundos */}
+              <div className="flex items-center gap-1.5 pt-1.5 border-t border-gray-800/80">
+                <span className="text-[11px] font-bold text-gray-400 mr-1">Rápido:</span>
+                {[10, 15, 20, 30, 45, 60].map((sec) => (
+                  <button
+                    key={sec}
+                    type="button"
+                    onClick={() => setData({ ...data, rotationSeconds: sec })}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                      Number(data.rotationSeconds) === sec
+                        ? 'bg-yellow-400 text-black shadow font-black'
+                        : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                    }`}
+                  >
+                    {sec}s
+                  </button>
+                ))}
               </div>
             </div>
 

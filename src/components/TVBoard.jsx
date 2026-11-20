@@ -246,7 +246,7 @@ export function TVBoard() {
 
   slidesCountRef.current = Math.max(1, slides.length);
 
-  const durationSec = (data?.rotationSeconds || 60);
+  const durationSec = Math.max(5, parseInt(data?.rotationSeconds, 10) || 60);
 
   // Rotation Timer
   useEffect(() => {
