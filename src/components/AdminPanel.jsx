@@ -428,8 +428,8 @@ export function AdminPanel() {
   };
 
   const formatCurrency = (val) => {
-    const raw = val.replace(/\D/g, '');
-    if (!raw) return '$ 0';
+    const raw = String(val || '').replace(/\D/g, '');
+    if (!raw) return '';
     const num = parseInt(raw, 10);
     return '$ ' + num.toLocaleString('es-UY');
   };
@@ -1179,34 +1179,35 @@ export function AdminPanel() {
                 </div>
               </div>
 
-              {/* Bolillas de Oro + Extra Inputs */}
-              <div className="flex items-center justify-center gap-2 sm:gap-3 py-1">
-                {Array.from({ length: 5 }, (_, i) => {
-                  const val = data.cincoDeOro?.numerosOro?.[i] || '';
-                  const key = `c5oro-numerosOro-${i}`;
-                  return (
-                    <div key={i} className="flex flex-col items-center">
-                      <span className="text-[10px] font-bold text-gray-400 mb-1">#{i + 1}</span>
-                      <input
-                        ref={(el) => (inputsRef.current[key] = el)}
-                        type="tel"
-                        pattern="[0-9]*"
-                        maxLength={2}
-                        value={val}
-                        onChange={(e) => handleCincoDeOroNumberChange('numerosOro', i, e.target.value)}
-                        placeholder="--"
-                        className="w-13 h-13 sm:w-14 sm:h-14 bg-gray-900 text-yellow-300 font-mono font-black text-xl sm:text-2xl text-center rounded-xl border border-yellow-500/40 focus:border-yellow-400 focus:bg-gray-800 outline-none shadow-md"
-                      />
-                    </div>
-                  );
-                })}
+              {/* Bolillas de Oro (5 Casillas Proporcionales) */}
+              <div className="flex flex-col items-center gap-2.5 py-1">
+                <div className="grid grid-cols-5 gap-2 w-full max-w-[340px]">
+                  {Array.from({ length: 5 }, (_, i) => {
+                    const val = data.cincoDeOro?.numerosOro?.[i] || '';
+                    const key = `c5oro-numerosOro-${i}`;
+                    return (
+                      <div key={i} className="flex flex-col items-center">
+                        <span className="text-[10px] font-bold text-gray-400 mb-1">#{i + 1}</span>
+                        <input
+                          ref={(el) => (inputsRef.current[key] = el)}
+                          type="tel"
+                          pattern="[0-9]*"
+                          maxLength={2}
+                          value={val}
+                          onChange={(e) => handleCincoDeOroNumberChange('numerosOro', i, e.target.value)}
+                          placeholder="--"
+                          className="w-full h-12 bg-gray-900 text-yellow-300 font-mono font-black text-xl text-center rounded-xl border border-yellow-500/50 focus:border-yellow-400 focus:bg-gray-800 outline-none shadow-md"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
 
-                <div className="text-yellow-400/80 font-black text-xl px-1 mt-5">+</div>
-
-                {/* Bolilla Extra */}
-                <div className="flex flex-col items-center">
-                  <span className="text-[10px] font-black text-orange-400 uppercase tracking-wider mb-1">
-                    EXTRA
+                {/* Bolilla Extra destacada en su fila */}
+                <div className="flex items-center justify-center gap-3 pt-2.5 border-t border-white/10 w-full max-w-[340px]">
+                  <span className="text-xs font-black text-orange-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+                    BOLILLA EXTRA:
                   </span>
                   <input
                     ref={(el) => (inputsRef.current['c5oro-bolillaExtra'] = el)}
@@ -1225,7 +1226,7 @@ export function AdminPanel() {
                       });
                     }}
                     placeholder="--"
-                    className="w-13 h-13 sm:w-14 sm:h-14 bg-gray-900 text-orange-400 font-mono font-black text-xl sm:text-2xl text-center rounded-xl border-2 border-orange-500/60 focus:border-orange-400 focus:bg-gray-800 outline-none shadow-[0_0_12px_rgba(251,146,60,0.25)]"
+                    className="w-14 h-12 bg-gray-900 text-orange-400 font-mono font-black text-xl text-center rounded-xl border-2 border-orange-500 focus:border-orange-400 focus:bg-gray-800 outline-none shadow-[0_0_12px_rgba(251,146,60,0.3)]"
                   />
                 </div>
               </div>
@@ -1264,27 +1265,70 @@ export function AdminPanel() {
                 </div>
               </div>
 
-              {/* 5 Bolillas Revancha Inputs */}
-              <div className="flex items-center justify-center gap-2 sm:gap-3 py-1">
-                {Array.from({ length: 5 }, (_, i) => {
-                  const val = data.cincoDeOro?.numerosRevancha?.[i] || '';
-                  const key = `c5oro-numerosRevancha-${i}`;
-                  return (
-                    <div key={i} className="flex flex-col items-center">
-                      <span className="text-[10px] font-bold text-gray-400 mb-1">#{i + 1}</span>
-                      <input
-                        ref={(el) => (inputsRef.current[key] = el)}
-                        type="tel"
-                        pattern="[0-9]*"
-                        maxLength={2}
-                        value={val}
-                        onChange={(e) => handleCincoDeOroNumberChange('numerosRevancha', i, e.target.value)}
-                        placeholder="--"
-                        className="w-13 h-13 sm:w-14 sm:h-14 bg-gray-900 text-yellow-300 font-mono font-black text-xl sm:text-2xl text-center rounded-xl border border-yellow-500/40 focus:border-yellow-400 focus:bg-gray-800 outline-none shadow-md"
-                      />
+              {/* 5 Bolillas Revancha (5 Casillas Proporcionales) */}
+              <div className="flex items-center justify-center py-1">
+                <div className="grid grid-cols-5 gap-2 w-full max-w-[340px]">
+                  {Array.from({ length: 5 }, (_, i) => {
+                    const val = data.cincoDeOro?.numerosRevancha?.[i] || '';
+                    const key = `c5oro-numerosRevancha-${i}`;
+                    return (
+                      <div key={i} className="flex flex-col items-center">
+                        <span className="text-[10px] font-bold text-gray-400 mb-1">#{i + 1}</span>
+                        <input
+                          ref={(el) => (inputsRef.current[key] = el)}
+                          type="tel"
+                          pattern="[0-9]*"
+                          maxLength={2}
+                          value={val}
+                          onChange={(e) => handleCincoDeOroNumberChange('numerosRevancha', i, e.target.value)}
+                          placeholder="--"
+                          className="w-full h-12 bg-gray-900 text-yellow-300 font-mono font-black text-xl text-center rounded-xl border border-yellow-500/50 focus:border-yellow-400 focus:bg-gray-800 outline-none shadow-md"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* SECCIÓN VISTA PREVIA DE LAS BOLILLAS DORADAS */}
+            <div className="bg-gradient-to-r from-blue-950 via-blue-900 to-indigo-950 p-4 rounded-xl border border-blue-400/40 flex flex-col gap-3 shadow-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-black text-yellow-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
+                  Vista Previa TV: Bolillas Doradas
+                </span>
+                <span className="text-[11px] font-bold text-white/80">
+                  {data.cincoDeOro?.fecha || '18/11/26'}
+                </span>
+              </div>
+
+              {/* Oro */}
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-gray-300 uppercase">Pozo de Oro:</span>
+                <div className="flex items-center gap-2 overflow-x-auto py-1">
+                  {(data.cincoDeOro?.numerosOro || ['16', '21', '26', '41', '42']).map((num, idx) => (
+                    <div key={idx} className="lottery-ball-gold w-10 h-10 sm:w-11 sm:h-11 text-base sm:text-lg font-mono font-black text-black flex items-center justify-center flex-shrink-0 shadow-md">
+                      {num || '--'}
                     </div>
-                  );
-                })}
+                  ))}
+                  <span className="text-yellow-300 font-black text-lg px-0.5">+</span>
+                  <div className="lottery-ball-gold-extra w-10 h-10 sm:w-11 sm:h-11 text-base sm:text-lg font-mono font-black text-black flex items-center justify-center flex-shrink-0 shadow-md">
+                    {data.cincoDeOro?.bolillaExtra || '--'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Revancha */}
+              <div className="flex flex-col gap-1 border-t border-white/10 pt-2">
+                <span className="text-[10px] font-bold text-gray-300 uppercase">Pozo Revancha:</span>
+                <div className="flex items-center gap-2 overflow-x-auto py-1">
+                  {(data.cincoDeOro?.numerosRevancha || ['03', '06', '33', '35', '39']).map((num, idx) => (
+                    <div key={idx} className="lottery-ball-gold w-10 h-10 sm:w-11 sm:h-11 text-base sm:text-lg font-mono font-black text-black flex items-center justify-center flex-shrink-0 shadow-md">
+                      {num || '--'}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
