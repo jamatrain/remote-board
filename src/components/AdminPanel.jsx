@@ -267,6 +267,7 @@ export function AdminPanel() {
         else if (action === 'prev') label = 'Anterior enviado';
         else if (action === 'pause') label = '⏸ Giro Pausado';
         else if (action === 'resume') label = '▶️ Giro Reanudado';
+        else if (action === 'reload') label = '🔄 Recargando TV...';
         else if (action === 'togglePause') label = json.command?.isPaused ? '⏸ Giro Pausado' : '▶️ Giro Reanudado';
         setTvControlStatus(label);
         setTimeout(() => setTvControlStatus(null), 2000);
@@ -701,6 +702,24 @@ export function AdminPanel() {
                 ★ Ofertas Kiosko
               </button>
             </div>
+          </div>
+
+          {/* Botón para recargar TV remotamente */}
+          <div className="pt-2 border-t border-white/10 flex items-center justify-between">
+            <span className="text-[11px] text-gray-400">Actualizar navegador del TV:</span>
+            <button
+              type="button"
+              onClick={() => {
+                if (confirm('¿Deseas refrescar la pantalla del televisor remotamente?')) {
+                  sendTvControl('reload');
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 active:bg-cyan-600 text-cyan-300 rounded-lg text-xs font-bold transition border border-cyan-500/30 shadow-sm"
+              title="Refrescar el navegador del televisor remotamente"
+            >
+              <RotateCw className="w-3.5 h-3.5" />
+              Recargar TV Remoto
+            </button>
           </div>
         </section>
 

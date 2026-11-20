@@ -8,18 +8,39 @@ export function CincoDeOroSlide({
   tema = 'blue'
 }) {
   const themes = {
-    blue: 'from-[#001ae6] via-[#0010a3] to-[#00086b]',
-    gold: 'from-[#d97706] via-[#b45309] to-[#78350f]',
-    purple: 'from-[#6b21a8] via-[#581c87] to-[#3b0764]',
-    emerald: 'from-[#047857] via-[#065f46] to-[#064e3b]',
-    dark: 'from-[#0f172a] via-[#1e293b] to-[#020617]',
-    ruby: 'from-[#b91c1c] via-[#991b1b] to-[#450a0a]'
+    blue: {
+      class: 'from-[#001ae6] via-[#0010a3] to-[#00086b]',
+      style: 'linear-gradient(to bottom, #001ae6, #0010a3, #00086b)'
+    },
+    gold: {
+      class: 'from-[#d97706] via-[#b45309] to-[#78350f]',
+      style: 'linear-gradient(to bottom, #d97706, #b45309, #78350f)'
+    },
+    purple: {
+      class: 'from-[#6b21a8] via-[#581c87] to-[#3b0764]',
+      style: 'linear-gradient(to bottom, #6b21a8, #581c87, #3b0764)'
+    },
+    emerald: {
+      class: 'from-[#047857] via-[#065f46] to-[#064e3b]',
+      style: 'linear-gradient(to bottom, #047857, #065f46, #064e3b)'
+    },
+    dark: {
+      class: 'from-[#0f172a] via-[#1e293b] to-[#020617]',
+      style: 'linear-gradient(to bottom, #0f172a, #1e293b, #020617)'
+    },
+    ruby: {
+      class: 'from-[#b91c1c] via-[#991b1b] to-[#450a0a]',
+      style: 'linear-gradient(to bottom, #b91c1c, #991b1b, #450a0a)'
+    }
   };
 
-  const bgGradient = themes[tema] || themes.blue;
+  const selectedTheme = themes[tema] || themes.blue;
 
   return (
-    <div className={`w-full h-full relative overflow-hidden flex flex-col justify-between p-6 sm:p-10 bg-gradient-to-b ${bgGradient} text-white select-none`}>
+    <div 
+      className={`w-full h-full relative overflow-hidden flex flex-col justify-between p-6 sm:p-10 bg-gradient-to-b ${selectedTheme.class} text-white select-none`}
+      style={{ background: selectedTheme.style }}
+    >
       
       {/* TOP: "POZOS APROXIMADOS !!!" (Centered, bright gold bold) */}
       <div className="w-full text-center mt-3 z-10">

@@ -93,6 +93,10 @@ export function TVBoard() {
             // Check if this is a remote control command from iPhone
             if (payload && payload._type === 'control') {
               const count = slidesCountRef.current || 1;
+              if (payload.action === 'reload') {
+                window.location.reload();
+                return;
+              }
               if (payload.action === 'next') {
                 setCurrentSlideIndex(prev => (prev + 1) % count);
                 setProgress(0);
