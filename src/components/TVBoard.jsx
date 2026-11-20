@@ -3,6 +3,7 @@ import { TombolaSlide } from './slides/TombolaSlide';
 import { QuinielaSlide } from './slides/QuinielaSlide';
 import { CincoDeOroSlide } from './slides/CincoDeOroSlide';
 import { PromoSlide } from './slides/PromoSlide';
+import { Maximize, Minimize } from 'lucide-react';
 
 export function TVBoard() {
   const [data, setData] = useState(null);
@@ -10,6 +11,7 @@ export function TVBoard() {
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState(0);
   const [connected, setConnected] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Load initial data and connect to SSE
   useEffect(() => {
@@ -35,7 +37,6 @@ export function TVBoard() {
     // Connect to Server-Sent Events (SSE) if supported
     const connectSSE = () => {
       if (typeof window === 'undefined' || !('EventSource' in window)) {
-        console.warn('EventSource no soportado en este navegador de TV. Usando actualización por sondeo.');
         return;
       }
 
@@ -79,7 +80,7 @@ export function TVBoard() {
     };
   }, []);
 
-  // Build the list of active slides (Lottery + Kiosko Belvedere Promos)
+  // Build the list of active slides
   const slides = [];
   if (data) {
     const active = data.activeScreens || {};
@@ -160,7 +161,7 @@ export function TVBoard() {
       });
     }
 
-    // 6. Dynamic Promotional Slides for "Kiosko Belvedere"
+    // 6. Promotional Slides for "Kiosko Belvedere"
     if (Array.isArray(data.promociones)) {
       data.promociones.forEach((promo, idx) => {
         if (promo && promo.active !== false) {
@@ -174,10 +175,9 @@ export function TVBoard() {
     }
   }
 
-  // Duration per slide: strict 60 seconds (1 minute) by default
   const durationSec = (data?.rotationSeconds || 60);
 
-  // Rotation Timer (rotates every 60 seconds)
+  // Rotation Timer
   useEffect(() => {
     if (slides.length <= 1 || isPaused) {
       setProgress(0);
@@ -206,6 +206,16 @@ export function TVBoard() {
     }
   }, [slides.length, currentSlideIndex]);
 
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen().catch(() => {});
+      setIsFullscreen(false);
+    }
+  };
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -219,11 +229,7 @@ export function TVBoard() {
         e.preventDefault();
         setIsPaused((p) => !p);
       } else if (e.key === 'f' || e.key === 'F') {
-        if (!document.fullscreenElement) {
-          document.documentElement.requestFullscreen().catch(() => {});
-        } else {
-          document.exitFullscreen().catch(() => {});
-        }
+        toggleFullscreen();
       }
     };
 
@@ -233,7 +239,7 @@ export function TVBoard() {
 
   if (!data) {
     return (
-      <div className="w-screen h-screen bg-black flex flex-col items-center justify-center text-white">
+      <div className="w-screen h-screen bg-[#050b14] flex flex-col items-center justify-center text-white font-sans">
         <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mb-4" />
         <h2 className="text-2xl font-bold tracking-widest uppercase">Cargando Tablero...</h2>
       </div>
@@ -242,7 +248,7 @@ export function TVBoard() {
 
   if (slides.length === 0) {
     return (
-      <div className="w-screen h-screen bg-gray-900 flex flex-col items-center justify-center text-white p-8 text-center">
+      <div className="w-screen h-screen bg-gray-900 flex flex-col items-center justify-center text-white p-8 text-center font-sans">
         <h2 className="text-3xl font-black text-yellow-400 mb-2">No hay pantallas activas</h2>
         <p className="text-gray-300">Activa al menos una pantalla de sorteo o una oferta desde el panel de control (/admin).</p>
       </div>
@@ -253,36 +259,39 @@ export function TVBoard() {
 
   return (
     <div className="w-screen h-screen bg-black flex items-center justify-center overflow-hidden select-none">
-      {/* 16:9 Display Container for 32" TV */}
-      <div className="relative w-full h-full max-w-[177.78vh] max-h-[56.25vw] flex flex-col">
+      
+      {/* 100% Full-bleed container without restrictive max-width to avoid black padding */}
+      <div className="relative w-full h-full flex flex-col overflow-hidden">
         
-        {/* Subtle Progress Bar on top showing countdown (1 minute per slide) */}
+        {/* Subtle Progress Bar on top */}
         {slides.length > 1 && (
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-black/40 z-50">
             <div
-              className="h-full bg-yellow-400/90 transition-all duration-200 ease-linear shadow-[0_0_10px_rgba(250,204,21,0.9)]"
+              className="h-full bg-yellow-400 transition-all duration-200 ease-linear shadow-[0_0_10px_rgba(250,204,21,0.9)]"
               style={{ width: `${progress}%` }}
             />
           </div>
         )}
 
-        {/* Status Indicator */}
-        {(!connected || isPaused) && (
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-semibold">
-            {!connected && (
-              <span className="flex items-center gap-1.5 text-amber-400">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                Sin conexión - Datos locales
-              </span>
-            )}
-            {isPaused && (
-              <span className="text-yellow-400 ml-2">⏸ Pausado</span>
-            )}
-          </div>
-        )}
+        {/* Floating Quick Controls (Fullscreen button for TV) */}
+        <div className="absolute top-3 right-3 z-50 flex items-center gap-2">
+          {(!connected || isPaused) && (
+            <div className="bg-black/80 px-3 py-1 rounded-full text-xs font-bold text-amber-400 border border-amber-400/40">
+              {!connected ? '⚠️ Sin conexión' : '⏸ Pausado'}
+            </div>
+          )}
+
+          <button
+            onClick={toggleFullscreen}
+            className="p-2 bg-black/60 hover:bg-black/90 text-white rounded-xl backdrop-blur-sm border border-white/20 transition shadow-lg"
+            title="Pantalla Completa"
+          >
+            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+          </button>
+        </div>
 
         {/* Current Active Slide */}
-        <div key={activeSlide.id} className="w-full h-full animate-fadeIn transition-opacity duration-500">
+        <div key={activeSlide.id} className="w-full h-full">
           {activeSlide.component}
         </div>
       </div>
