@@ -172,7 +172,9 @@ export function AdminPanel() {
   }, []);
 
   const handleSave = async (customData = null) => {
-    const toSave = customData || data;
+    // Prevent React SyntheticEvent from being treated as payload data
+    const isEvent = customData && typeof customData === 'object' && ('nativeEvent' in customData || 'target' in customData || '_reactName' in customData);
+    const toSave = (!isEvent && customData) ? customData : data;
     if (!toSave) return false;
     setSaving(true);
     try {
@@ -1520,7 +1522,8 @@ export function AdminPanel() {
       <footer className="fixed bottom-0 left-0 right-0 z-40 bg-gray-950/90 backdrop-blur-lg border-t border-gray-800 p-3 sm:p-4">
         <div className="max-w-xl mx-auto flex items-center gap-3">
           <button
-            onClick={handleSave}
+            type="button"
+            onClick={() => handleSave()}
             disabled={saving}
             className={`flex-1 py-3.5 px-4 rounded-xl font-black text-sm tracking-wider uppercase flex items-center justify-center gap-2 shadow-xl transition transform active:scale-[0.98] ${
               saveSuccess
