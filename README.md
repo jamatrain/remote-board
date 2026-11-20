@@ -1,7 +1,28 @@
 # Remote Board 📺🎰
-### Sistema de Cartelería Digital Remota para Resultados de Quiniela, Tómbola y 5 de Oro
+### Sistema de Cartelería Digital Oficial con Integración en Vivo a La Banca (Uruguay)
 
-Sistema web desarrollado para visualizar resultados de sorteos de lotería (diseño oficial de La Banca, Uruguay) en una pantalla o TV LED de 32" vía Chromecast / Google TV, controlado de forma remota desde un iPhone.
+Sistema web con integración a la API oficial de **La Banca** (`info-api.labanca.com.uy`) para proyectar automáticamente en un TV LED de 32" los resultados oficiales de la **Quiniela**, **Tómbola** y **5 de Oro**, con panel de control para iPhone y sincronización en tiempo real vía Server-Sent Events (SSE).
+
+---
+
+## ⚡ Integración Oficial en Vivo (La Banca)
+
+El sistema se conecta directamente a la API oficial de La Banca:
+* `QUINIELA_VESPERTINA` (ID 1)
+* `QUINIELA_NOCTURNA` (ID 2)
+* `TOMBOLA_VESPERTINA` (ID 3)
+* `TOMBOLA_NOCTURNA` (ID 4)
+* `CINCO_DE_ORO` (ID 5: Pozos estimados y fecha del próximo sorteo)
+
+### 🧠 Reglas de Negocio y Control de Duplicados:
+1. **Horarios de sorteos**:
+   * **Por la mañana (antes de las 14:00 - 15:00 hs)**: Muestra los sorteos del día anterior (Vespertina y Nocturna del día previo), y el 5 de Oro del miércoles o domingo anterior.
+   * **Luego de las 14:30 - 15:30 hs**: Al publicarse el sorteo vespertino de hoy, el sistema lo detecta y actualiza la Vespertina.
+   * **Luego de las 21:30 hs**: Se actualiza la Nocturna con el sorteo de la noche de hoy.
+2. **Regla de deduplicación (Primeros 10 resultados)**:
+   * Antes de emitir cualquier actualización hacia el TV, el sistema compara los **primeros 10 resultados** del sorteo obtenido contra los que ya están en pantalla.
+   * **Si los primeros 10 resultados coinciden**: El sistema determina que La Banca aún no ha publicado el sorteo nuevo y **NO lo reenvía al TV**, evitando sobreescrituras innecesarias.
+   * **Si los primeros 10 resultados cambian**: Se actualiza inmediatamente la base de datos y se dispara un evento SSE que refresca la TV en el acto.
 
 ---
 
@@ -20,14 +41,14 @@ Sistema web desarrollado para visualizar resultados de sorteos de lotería (dise
 * **URL del TV (`/tv` o `/#tv`)**:
   * Diseñada a pantalla completa (16:9) optimizada para TV de 32" (1366x768 / 1080p).
   * **Rotación automática**: Cambia suavemente de pantalla cada 60 segundos (ajustable).
-  * **Sincronización en tiempo real**: Utiliza Server-Sent Events (SSE) para actualizar los números en el televisor al instante apenas se guardan desde el celular.
+  * **Sincronización en tiempo real**: Utiliza Server-Sent Events (SSE) para actualizar los números en el televisor al instante.
 * **URL de Administración (`/admin` o `/`)**:
-  * Diseñada para **iPhone**: rápida, táctil y cómoda.
-  * Salto automático de casilla al escribir (3 cifras en Quiniela, 2 cifras en Tómbola).
-  * Botón **"Copiar y Ordenar a Tómbola"**: toma las terminaciones de la quiniela, las ordena de menor a mayor y genera la tómbola en 1 segundo.
-  * Función **"Pegar Lista"**: permite pegar un mensaje de WhatsApp o texto completo y carga los 20 números automáticamente.
-  * Formateo automático de moneda en 5 de Oro (`$ 17.400.000`).
-  * Selector de pantallas activas en el ciclo.
+  * Botón **"SINCRONIZAR AHORA CON LA BANCA"**: Consulta los últimos sorteos al instante.
+  * Auto-salto de casillas en entrada manual.
+  * Botón **"Copiar y Ordenar a Tómbola"**.
+  * Función **"Pegar Lista"**.
+  * Formateo automático de moneda en 5 de Oro.
+  * Selector de pantallas activas en el ciclo y temporizador.
 
 ---
 
@@ -35,51 +56,27 @@ Sistema web desarrollado para visualizar resultados de sorteos de lotería (dise
 
 ### Caso 1: Chromecast con Google TV (Control remoto físico dañado)
 1. **Activar Zona Wi-Fi en el iPhone**:
-   * Ve a **Ajustes > Compartir Internet** y actívalo.
-   * Marca la opción **"Maximizar compatibilidad"** (activa 2.4 GHz).
-2. **Conectar el Google TV al Wi-Fi del iPhone sin el control remoto**:
-   * **Método A (Control de la TV por HDMI-CEC)**: Conecta el Chromecast al puerto HDMI del TV. Con las flechas y el botón OK del propio control del televisor podrás moverte por el menú del Google TV para ir a Ajustes > Red y elegir el Wi-Fi de tu iPhone.
-   * **Método B (El truco del nombre idéntico)**: Ponle a tu iPhone temporalmente el mismo nombre y contraseña del Wi-Fi donde el Google TV ya estaba conectado antes. Al encenderlo, se conectará solo automáticamente.
-   * **Método C (Mouse USB)**: Conecta un mouse USB común al puerto USB-C del Chromecast (usando un adaptador USB-C) y podrás hacer clic en la pantalla para ingresar la clave.
+   * Ve a **Ajustes > Compartir Internet** y actívalo con *"Maximizar compatibilidad"*.
+2. **Conectar el Google TV al Wi-Fi del iPhone sin control**:
+   * **Método A (Control de la TV por HDMI-CEC)**: Conecta el Chromecast al HDMI del TV y usa las flechas y el botón OK del propio control de la tele.
+   * **Método B (Mismo nombre de red)**: Ponle a tu iPhone temporalmente el mismo nombre y clave del Wi-Fi donde el Google TV andaba antes. Se conectará solo.
+   * **Método C (Mouse USB)**: Conecta un mouse USB al puerto USB-C del Chromecast con un adaptador OTG.
 3. **Mostrar en la TV**:
-   * En el Google TV, abre un navegador (como **TV Bro** u **OpenTV Browser**) y pon la dirección `https://tu-app.com/tv` a pantalla completa. ¡Queda funcionando solo sin gastar batería de tu celular!
+   * Abre en el navegador del Google TV (**TV Bro** u **OpenTV Browser**) la URL `https://tu-app.com/tv` a pantalla completa. ¡Queda funcionando solo sin gastar batería del celular!
 
 ### Caso 2: Chromecast clásico (Dongle sin control)
 1. Conecta el Chromecast a la red de tu iPhone.
 2. En tu iPhone descarga la app gratuita **Web Video Caster** (o **Replica / DoCast**).
-3. Abre en la app la dirección `https://tu-app.com/tv` y toca el botón de **Transmitir al Chromecast**.
+3. Abre en la app la dirección `https://tu-app.com/tv` y toca **Transmitir al Chromecast**.
 
 ---
 
 ## 🛠️ Instalación y Uso Local
 
 ```bash
-# Instalar dependencias
-npm install
-
-# Compilar frontend
-npm run build
-
-# Iniciar servidor
+# Iniciar servidor (incluye sincronización automática cada 3 minutos con La Banca)
 npm start
 ```
 
 * Panel de control: [http://localhost:3000](http://localhost:3000)
 * Pantalla para el TV: [http://localhost:3000/tv](http://localhost:3000/tv)
-
----
-
-## ☁️ Despliegue Gratuito en la Nube (1 Clic)
-
-Para que la app esté accesible desde cualquier lugar con una URL pública:
-
-### En Render.com (Recomendado - 100% Gratis):
-1. Crea una cuenta gratuita en [Render.com](https://render.com).
-2. Haz clic en **New > Web Service** y conecta este repositorio (`remote-board`).
-3. Configuración:
-   * **Runtime**: `Node`
-   * **Build Command**: `npm install && npm run build`
-   * **Start Command**: `npm start`
-4. Render te dará una URL HTTPS como: `https://remote-board.onrender.com`.
-   * En tu iPhone abres: `https://remote-board.onrender.com`
-   * En la TV abres: `https://remote-board.onrender.com/tv`
