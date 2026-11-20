@@ -217,8 +217,18 @@ export function AdminPanel() {
         return;
       }
       if (res.ok) {
-        setTvControlStatus(action === 'next' ? 'Siguiente enviado' : action === 'prev' ? 'Anterior enviado' : 'Comando enviado');
-        setTimeout(() => setTvControlStatus(null), 1500);
+        const json = await res.json();
+        if (json.command && typeof json.command.isPaused === 'boolean') {
+          setData(prev => prev ? ({ ...prev, isPaused: json.command.isPaused }) : prev);
+        }
+        let label = 'Comando enviado';
+        if (action === 'next') label = 'Siguiente enviado';
+        else if (action === 'prev') label = 'Anterior enviado';
+        else if (action === 'pause') label = '⏸ Giro Pausado';
+        else if (action === 'resume') label = '▶️ Giro Reanudado';
+        else if (action === 'togglePause') label = json.command?.isPaused ? '⏸ Giro Pausado' : '▶️ Giro Reanudado';
+        setTvControlStatus(label);
+        setTimeout(() => setTvControlStatus(null), 2000);
       }
     } catch (e) {
       console.error('Error enviando comando a TV:', e);
@@ -477,13 +487,33 @@ export function AdminPanel() {
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                 CONTROL REMOTO EN VIVO
               </span>
-              <h2 className="text-base font-black text-white">Cambiar Pantallas en la Tele</h2>
+              <h2 className="text-base font-black text-white">Control del Televisor</h2>
             </div>
-            {tvControlStatus && (
-              <span className="text-xs bg-emerald-500 text-black font-black px-2.5 py-1 rounded-full animate-bounce">
-                {tvControlStatus}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {tvControlStatus ? (
+                <span className="text-xs bg-emerald-500 text-black font-black px-2.5 py-1 rounded-full animate-bounce">
+                  {tvControlStatus}
+                </span>
+              ) : (
+                <span className={`text-[11px] font-black px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow ${
+                  data?.isPaused 
+                    ? 'bg-amber-500 text-black animate-pulse' 
+                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                }`}>
+                  {data?.isPaused ? (
+                    <>
+                      <Pause className="w-3 h-3 fill-black" />
+                      PAUSADO
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-3 h-3 fill-emerald-300" />
+                      EN GIRO (PLAY)
+                    </>
+                  )}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Botones de acción directa para avanzar / retroceder */}
@@ -496,14 +526,27 @@ export function AdminPanel() {
               <SkipBack className="w-4 h-4 text-gray-300" />
               Anterior
             </button>
-            <button
-              type="button"
-              onClick={() => sendTvControl('togglePause')}
-              className="flex items-center justify-center gap-1.5 py-3 px-3 bg-amber-600 active:bg-amber-700 text-white rounded-xl font-black text-sm shadow-md transition"
-            >
-              <Play className="w-4 h-4 text-white" />
-              Pausar / Play
-            </button>
+
+            {data?.isPaused ? (
+              <button
+                type="button"
+                onClick={() => sendTvControl('resume')}
+                className="flex items-center justify-center gap-1.5 py-3 px-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 active:scale-95 text-black rounded-xl font-black text-sm shadow-lg ring-2 ring-emerald-400/50 transition"
+              >
+                <Play className="w-4 h-4 fill-black" />
+                Reanudar
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => sendTvControl('pause')}
+                className="flex items-center justify-center gap-1.5 py-3 px-3 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 active:scale-95 text-black rounded-xl font-black text-sm shadow-lg ring-2 ring-amber-400/50 transition"
+              >
+                <Pause className="w-4 h-4 fill-black" />
+                Pausar
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => sendTvControl('next')}
@@ -512,6 +555,21 @@ export function AdminPanel() {
               Siguiente
               <SkipForward className="w-4 h-4 text-white" />
             </button>
+          </div>
+
+          {/* Estado explicativo */}
+          <div className="text-center px-1">
+            {data?.isPaused ? (
+              <p className="text-[11px] font-bold text-amber-300 flex items-center justify-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400 inline-block animate-ping" />
+                El televisor está fijo en esta pantalla. Tocá "Reanudar" para que vuelva a rotar solo.
+              </p>
+            ) : (
+              <p className="text-[11px] font-medium text-emerald-300/90 flex items-center justify-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                El televisor está rotando automáticamente cada pantalla cada 60 segundos.
+              </p>
+            )}
           </div>
 
           {/* Accesos rápidos a sorteos específicos */}
@@ -947,6 +1005,67 @@ export function AdminPanel() {
                 placeholder="Ej: Jueves 5, Lunes 23"
                 className="w-full bg-gray-950 text-white font-bold text-lg py-2.5 px-4 rounded-xl border border-gray-700 focus:border-blue-400 outline-none"
               />
+            </div>
+
+            {/* Selector de Color / Fondo del 5 de Oro */}
+            <div className="flex flex-col gap-2.5 bg-gray-950/80 p-4 rounded-xl border border-gray-800 mt-1">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-black text-yellow-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-yellow-400" />
+                  Color de Fondo del 5 de Oro
+                </label>
+                <span className="text-[11px] text-gray-300 font-bold capitalize">
+                  {(data.cincoDeOro?.tema || 'blue') === 'blue' ? 'Azul Oficial' :
+                   (data.cincoDeOro?.tema || 'blue') === 'gold' ? 'Dorado Millonario' :
+                   (data.cincoDeOro?.tema || 'blue') === 'purple' ? 'Púrpura Fortuna' :
+                   (data.cincoDeOro?.tema || 'blue') === 'emerald' ? 'Verde Esmeralda' :
+                   (data.cincoDeOro?.tema || 'blue') === 'ruby' ? 'Rojo Rubí' : 'Noche Profunda'}
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-400">
+                Seleccioná el color o degradé para el slide del 5 de Oro en el televisor:
+              </p>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-1">
+                {[
+                  { id: 'blue', label: 'Azul Oficial', bg: 'bg-gradient-to-b from-[#001ae6] to-[#00086b]' },
+                  { id: 'gold', label: 'Dorado', bg: 'bg-gradient-to-b from-[#d97706] to-[#78350f]' },
+                  { id: 'purple', label: 'Púrpura', bg: 'bg-gradient-to-b from-[#6b21a8] to-[#3b0764]' },
+                  { id: 'emerald', label: 'Verde', bg: 'bg-gradient-to-b from-[#047857] to-[#064e3b]' },
+                  { id: 'ruby', label: 'Rojo Rubí', bg: 'bg-gradient-to-b from-[#b91c1c] to-[#450a0a]' },
+                  { id: 'dark', label: 'Noche', bg: 'bg-gradient-to-b from-[#1e293b] to-[#020617]' }
+                ].map((th) => {
+                  const isSelected = (data.cincoDeOro?.tema || 'blue') === th.id;
+                  return (
+                    <button
+                      key={th.id}
+                      type="button"
+                      onClick={() => {
+                        setData({
+                          ...data,
+                          cincoDeOro: {
+                            ...data.cincoDeOro,
+                            tema: th.id
+                          }
+                        });
+                      }}
+                      className={`relative flex flex-col items-center justify-center py-3.5 px-1.5 rounded-xl border-2 transition-all shadow-md ${th.bg} ${
+                        isSelected
+                          ? 'border-yellow-400 ring-2 ring-yellow-400/50 scale-105 shadow-yellow-500/20'
+                          : 'border-white/20 hover:border-white/50 opacity-75 hover:opacity-100'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute top-1 right-1 bg-yellow-400 text-black rounded-full p-0.5 shadow">
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </div>
+                      )}
+                      <span className="text-xs font-black text-white drop-shadow tracking-tight">
+                        {th.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}

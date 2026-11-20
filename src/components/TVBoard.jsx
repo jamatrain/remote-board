@@ -28,6 +28,9 @@ export function TVBoard() {
   const updateDataWithCache = (newData) => {
     if (!newData) return;
     setData(newData);
+    if (typeof newData.isPaused === 'boolean') {
+      setIsPaused(newData.isPaused);
+    }
     try {
       localStorage.setItem('kb_tv_offline_data', JSON.stringify(newData));
     } catch (e) {
@@ -101,10 +104,13 @@ export function TVBoard() {
               } else if (payload.action === 'resume') {
                 setIsPaused(false);
               } else if (payload.action === 'togglePause') {
-                setIsPaused(p => !p);
+                setIsPaused(typeof payload.isPaused === 'boolean' ? payload.isPaused : p => !p);
               } else if (payload.action === 'goto' && typeof payload.slideIndex === 'number') {
                 setCurrentSlideIndex(payload.slideIndex % count);
                 setProgress(0);
+              }
+              if (typeof payload.isPaused === 'boolean') {
+                setIsPaused(payload.isPaused);
               }
               return;
             }
@@ -218,6 +224,7 @@ export function TVBoard() {
             pozoOro={data.cincoDeOro?.pozoOro}
             pozoRevancha={data.cincoDeOro?.pozoRevancha}
             proximoSorteo={data.cincoDeOro?.proximoSorteo}
+            tema={data.cincoDeOro?.tema || 'blue'}
           />
         )
       });
@@ -370,9 +377,21 @@ export function TVBoard() {
         {slides.length > 1 && (
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-black/40 z-50">
             <div
-              className="h-full bg-yellow-400 transition-all duration-200 ease-linear shadow-[0_0_10px_rgba(250,204,21,0.9)]"
-              style={{ width: `${progress}%` }}
+              className={`h-full transition-all duration-200 ease-linear ${
+                isPaused 
+                  ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.9)]' 
+                  : 'bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.9)]'
+              }`}
+              style={{ width: isPaused ? '100%' : `${progress}%` }}
             />
+          </div>
+        )}
+
+        {/* Clear Pause Indicator Badge on screen */}
+        {isPaused && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-amber-500/95 text-black font-black text-xs sm:text-sm px-4 py-1.5 rounded-full shadow-2xl border-2 border-white animate-pulse">
+            <Pause className="w-4 h-4 fill-black" />
+            <span className="uppercase tracking-wider">Giro Pausado en esta Pantalla</span>
           </div>
         )}
 

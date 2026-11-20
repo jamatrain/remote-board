@@ -1,9 +1,25 @@
 import React from 'react';
 import { OfficialFooter } from '../common/OfficialFooter';
 
-export function CincoDeOroSlide({ pozoOro = '$ 16.500.000', pozoRevancha = '$ 5.500.000', proximoSorteo = 'Lunes 23' }) {
+export function CincoDeOroSlide({ 
+  pozoOro = '$ 16.500.000', 
+  pozoRevancha = '$ 5.500.000', 
+  proximoSorteo = 'Lunes 23',
+  tema = 'blue'
+}) {
+  const themes = {
+    blue: 'from-[#001ae6] via-[#0010a3] to-[#00086b]',
+    gold: 'from-[#d97706] via-[#b45309] to-[#78350f]',
+    purple: 'from-[#6b21a8] via-[#581c87] to-[#3b0764]',
+    emerald: 'from-[#047857] via-[#065f46] to-[#064e3b]',
+    dark: 'from-[#0f172a] via-[#1e293b] to-[#020617]',
+    ruby: 'from-[#b91c1c] via-[#991b1b] to-[#450a0a]'
+  };
+
+  const bgGradient = themes[tema] || themes.blue;
+
   return (
-    <div className="w-full h-full relative overflow-hidden flex flex-col justify-between p-6 sm:p-10 bg-gradient-to-b from-[#001ae6] via-[#0010a3] to-[#00086b] text-white select-none">
+    <div className={`w-full h-full relative overflow-hidden flex flex-col justify-between p-6 sm:p-10 bg-gradient-to-b ${bgGradient} text-white select-none`}>
       
       {/* TOP: "POZOS APROXIMADOS !!!" (Centered, bright gold bold) */}
       <div className="w-full text-center mt-3 z-10">

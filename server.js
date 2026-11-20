@@ -158,8 +158,20 @@ app.post('/api/data', verifyPinMiddleware, (req, res) => {
 // TV Remote Control Command (from iPhone to TV)
 app.post('/api/control', verifyPinMiddleware, (req, res) => {
   const { action, slideIndex } = req.body;
-  broadcastControl({ action, slideIndex, timestamp: Date.now() });
-  res.json({ success: true, command: { action, slideIndex } });
+  const current = readData();
+  let isPaused = current.isPaused || false;
+  if (action === 'pause') isPaused = true;
+  else if (action === 'resume') isPaused = false;
+  else if (action === 'togglePause') isPaused = !isPaused;
+
+  const updated = {
+    ...current,
+    isPaused
+  };
+  saveData(updated);
+  broadcastControl({ action, slideIndex, isPaused, timestamp: Date.now() });
+  broadcastUpdate(updated);
+  res.json({ success: true, command: { action, slideIndex, isPaused } });
 });
 
 // Sync directly from official La Banca API (Protected by PIN & 60s Anti-DoS Cooldown)
