@@ -114,7 +114,8 @@
   "cincoDeOro": {
     "pozoOro": "$ 16.500.000",
     "pozoRevancha": "$ 5.500.000",
-    "proximoSorteo": "Lunes 23"
+    "proximoSorteo": "Lunes 23",
+    "tema": "blue"
   },
   "promociones": [
     {

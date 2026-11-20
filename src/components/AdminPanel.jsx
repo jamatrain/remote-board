@@ -171,7 +171,9 @@ export function AdminPanel() {
     loadData();
   }, []);
 
-  const handleSave = async () => {
+  const handleSave = async (customData = null) => {
+    const toSave = customData || data;
+    if (!toSave) return false;
     setSaving(true);
     try {
       const res = await fetch('/api/data', {
@@ -180,19 +182,21 @@ export function AdminPanel() {
           'Content-Type': 'application/json',
           'x-admin-pin': pin
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(toSave)
       });
       if (res.status === 401) {
         handleLogoutPin();
         alert('PIN expirado o incorrecto. Por favor ingresá el PIN nuevamente.');
-        return;
+        return false;
       }
       if (res.ok) {
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 2500);
+        return true;
       }
     } catch (err) {
       alert('Error guardando datos: ' + err.message);
+      return false;
     } finally {
       setSaving(false);
     }
@@ -406,7 +410,7 @@ export function AdminPanel() {
     setPromoModalOpen(true);
   };
 
-  const handleSavePromoDraft = (e) => {
+  const handleSavePromoDraft = async (e) => {
     if (e) e.preventDefault();
     if (!promoDraft.titulo.trim()) {
       alert('Por favor escribí el título o nombre de la oferta');
@@ -425,8 +429,10 @@ export function AdminPanel() {
         ...promoDraft
       });
     }
-    setData({ ...data, promociones: list });
+    const updated = { ...data, promociones: list };
+    setData(updated);
     setPromoModalOpen(false);
+    await handleSave(updated);
   };
 
   const addPromoSlide = () => {
@@ -439,11 +445,13 @@ export function AdminPanel() {
     setData({ ...data, promociones: list });
   };
 
-  const removePromoSlide = (index) => {
+  const removePromoSlide = async (index) => {
     if (confirm('¿Seguro que deseas eliminar esta oferta?')) {
       const list = [...(data.promociones || [])];
       list.splice(index, 1);
-      setData({ ...data, promociones: list });
+      const updated = { ...data, promociones: list };
+      setData(updated);
+      await handleSave(updated);
     }
   };
 
@@ -704,21 +712,22 @@ export function AdminPanel() {
             </div>
           </div>
 
-          {/* Botón para recargar TV remotamente */}
+          {/* Botón para recargar TV remotamente con guardado previo */}
           <div className="pt-2 border-t border-white/10 flex items-center justify-between">
             <span className="text-[11px] text-gray-400">Actualizar navegador del TV:</span>
             <button
               type="button"
-              onClick={() => {
-                if (confirm('¿Deseas refrescar la pantalla del televisor remotamente?')) {
+              onClick={async () => {
+                if (confirm('¿Deseas guardar los cambios y refrescar la pantalla del televisor remotamente?')) {
+                  await handleSave(data);
                   sendTvControl('reload');
                 }
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 active:bg-cyan-600 text-cyan-300 rounded-lg text-xs font-bold transition border border-cyan-500/30 shadow-sm"
-              title="Refrescar el navegador del televisor remotamente"
+              title="Guardar y refrescar el televisor remotamente"
             >
               <RotateCw className="w-3.5 h-3.5" />
-              Recargar TV Remoto
+              Guardar y Recargar TV
             </button>
           </div>
         </section>
@@ -1138,14 +1147,16 @@ export function AdminPanel() {
                     <button
                       key={th.id}
                       type="button"
-                      onClick={() => {
-                        setData({
+                      onClick={async () => {
+                        const updated = {
                           ...data,
                           cincoDeOro: {
                             ...data.cincoDeOro,
                             tema: th.id
                           }
-                        });
+                        };
+                        setData(updated);
+                        await handleSave(updated);
                       }}
                       className={`relative flex flex-col items-center justify-center py-3.5 px-1.5 rounded-xl border-2 transition-all shadow-md ${th.bg} ${
                         isSelected
@@ -1256,13 +1267,20 @@ export function AdminPanel() {
                           ✏️ Editar
                         </button>
 
-                        {/* Active toggle */}
+                        {/* Active toggle with immediate auto-save */}
                         <button
-                          onClick={() => updatePromoSlide(idx, 'active', !promo.active)}
+                          onClick={async () => {
+                            const newActive = promo.active === false ? true : false;
+                            const list = [...(data.promociones || [])];
+                            list[idx] = { ...list[idx], active: newActive };
+                            const updated = { ...data, promociones: list };
+                            setData(updated);
+                            await handleSave(updated);
+                          }}
                           className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
                             promo.active !== false
                               ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                              : 'bg-gray-800 text-gray-500 border border-gray-700'
+                              : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
                           }`}
                         >
                           {promo.active !== false ? 'Activa' : 'Pausada'}

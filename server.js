@@ -171,7 +171,6 @@ app.post('/api/control', verifyPinMiddleware, (req, res) => {
   };
   saveData(updated);
   broadcastControl({ action, slideIndex, isPaused, timestamp: Date.now() });
-  broadcastUpdate(updated);
   res.json({ success: true, command: { action, slideIndex, isPaused } });
 });
 
