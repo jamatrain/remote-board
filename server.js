@@ -3,6 +3,7 @@ import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { syncWithLaBanca } from './src/services/labanca.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,7 +29,7 @@ function readData() {
           tombolaNocturna: true,
           cincoDeOro: true
         },
-        fechaGeneral: new Date().toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: '2-digit' }),
+        fechaGeneral: '',
         quinielaVespertina: { fecha: '', numeros: Array(20).fill('') },
         tombolaVespertina: { fecha: '', numeros: Array(20).fill('') },
         quinielaNocturna: { fecha: '', numeros: Array(20).fill('') },
@@ -61,7 +62,7 @@ function broadcastUpdate(data) {
     try {
       client.res.write(payload);
     } catch (e) {
-      console.error('Error sending SSE:', e);
+      console.error('Error enviando SSE al cliente:', e);
     }
   });
 }
@@ -85,6 +86,32 @@ app.post('/api/data', (req, res) => {
   } catch (err) {
     console.error('Error guardando datos:', err);
     res.status(500).json({ success: false, error: 'Error al guardar los datos' });
+  }
+});
+
+// Sync directly from official La Banca API
+app.post('/api/sync', async (req, res) => {
+  try {
+    const current = readData();
+    const { result, updatedData } = await syncWithLaBanca(current);
+
+    if (result.updated) {
+      saveData(updatedData);
+      broadcastUpdate(updatedData);
+      console.log('⚡ [La Banca] Nuevos resultados guardados y emitidos al TV');
+    } else {
+      console.log('ℹ️ [La Banca] Resultados idénticos a los vigentes (primeros 10 coinciden). No se reenvía.');
+    }
+
+    res.json({
+      success: true,
+      updated: result.updated,
+      details: result.details,
+      data: updatedData
+    });
+  } catch (err) {
+    console.error('Error en sync con La Banca:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -112,6 +139,36 @@ app.get('/api/events', (req, res) => {
     sseClients = sseClients.filter(c => c.id !== clientId);
   });
 });
+
+// Automatic periodic sync with La Banca (every 3 minutes)
+setInterval(async () => {
+  try {
+    const current = readData();
+    const { result, updatedData } = await syncWithLaBanca(current);
+    if (result.updated) {
+      saveData(updatedData);
+      broadcastUpdate(updatedData);
+      console.log('⚡ [Auto-Sync] Resultados actualizados automáticamente desde La Banca');
+    }
+  } catch (e) {
+    console.error('Error en auto-sync periódico:', e);
+  }
+}, 3 * 60 * 1000);
+
+// Initial sync on server start (with a slight delay)
+setTimeout(async () => {
+  try {
+    const current = readData();
+    const { result, updatedData } = await syncWithLaBanca(current);
+    if (result.updated) {
+      saveData(updatedData);
+      broadcastUpdate(updatedData);
+      console.log('⚡ [Boot-Sync] Datos iniciales sincronizados con La Banca');
+    }
+  } catch (e) {
+    console.error('Error en boot sync:', e);
+  }
+}, 2000);
 
 // Serve frontend in production or if dist exists
 const distPath = path.join(__dirname, 'dist');

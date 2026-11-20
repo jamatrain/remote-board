@@ -11,7 +11,10 @@ import {
   ClipboardPaste,
   Calendar,
   Layers,
-  Settings
+  Settings,
+  RefreshCw,
+  Clock,
+  Info
 } from 'lucide-react';
 
 export function AdminPanel() {
@@ -19,6 +22,8 @@ export function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncFeedback, setSyncFeedback] = useState(null);
   const [activeTab, setActiveTab] = useState('quinielaVesp');
   const [pasteModalOpen, setPasteModalOpen] = useState(false);
   const [pasteTarget, setPasteTarget] = useState(null);
@@ -28,7 +33,7 @@ export function AdminPanel() {
   // References for auto-jumping inputs
   const inputsRef = useRef({});
 
-  useEffect(() => {
+  const loadData = () => {
     fetch('/api/data')
       .then((res) => res.json())
       .then((json) => {
@@ -39,6 +44,10 @@ export function AdminPanel() {
         console.error('Error fetching data:', err);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   const handleSave = async () => {
@@ -57,6 +66,29 @@ export function AdminPanel() {
       alert('Error guardando datos: ' + err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Trigger sync with official La Banca API
+  const handleSyncLaBanca = async () => {
+    setSyncing(true);
+    setSyncFeedback(null);
+    try {
+      const res = await fetch('/api/sync', { method: 'POST' });
+      const json = await res.json();
+      if (json.success) {
+        setData(json.data);
+        setSyncFeedback({
+          updated: json.updated,
+          details: json.details
+        });
+      } else {
+        alert('Error al sincronizar con La Banca: ' + (json.error || 'Error desconocido'));
+      }
+    } catch (err) {
+      alert('Error de red al consultar La Banca: ' + err.message);
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -93,7 +125,6 @@ export function AdminPanel() {
     // Get unique sorted numbers
     const unique = Array.from(new Set(extracted)).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
     
-    // Pad to 20 if fewer
     while (unique.length < 20) {
       unique.push('');
     }
@@ -107,7 +138,7 @@ export function AdminPanel() {
       }
     });
 
-    alert(`¡Tómbola generada con ${extracted.length} terminaciones! Se ordenaron de menor a mayor.`);
+    alert(`¡Tómbola generada con ${extracted.length} terminaciones ordenadas de menor a mayor!`);
   };
 
   // Sort Tombola numbers ascending
@@ -133,7 +164,6 @@ export function AdminPanel() {
     if (!pasteTarget || !pasteText.trim()) return;
 
     const maxLen = pasteTarget.startsWith('quiniela') ? 3 : 2;
-    // Match 2 or 3 digit numbers
     const regex = new RegExp(`\\b\\d{${maxLen}}\\b`, 'g');
     const matches = pasteText.match(regex) || [];
 
@@ -222,31 +252,61 @@ export function AdminPanel() {
       {/* Main Container */}
       <main className="flex-1 max-w-xl w-full mx-auto p-4 flex flex-col gap-5">
         
-        {/* General Sorteo Date & Rotation Card */}
-        <section className="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-md flex flex-col gap-3">
+        {/* LA BANCA LIVE SYNC CARD */}
+        <section className="bg-gradient-to-r from-blue-950 via-indigo-950 to-slate-900 border border-blue-600/40 rounded-2xl p-4 shadow-xl flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
-              <Calendar className="w-4 h-4 text-yellow-400" />
-              Fecha General del Sorteo
-            </label>
-            <input
-              type="text"
-              value={data.fechaGeneral || ''}
-              onChange={(e) => {
-                const f = e.target.value;
-                setData({
-                  ...data,
-                  fechaGeneral: f,
-                  quinielaVespertina: { ...data.quinielaVespertina, fecha: f },
-                  tombolaVespertina: { ...data.tombolaVespertina, fecha: f },
-                  quinielaNocturna: { ...data.quinielaNocturna, fecha: f },
-                  tombolaNocturna: { ...data.tombolaNocturna, fecha: f }
-                });
-              }}
-              placeholder="Ej: 20/11/26"
-              className="bg-gray-800 text-white font-mono font-bold text-center px-3 py-1.5 rounded-lg border border-gray-700 text-sm w-32 focus:border-yellow-400 outline-none"
-            />
+            <div>
+              <span className="text-[11px] font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping" />
+                Conexión Oficial
+              </span>
+              <h2 className="text-base font-black text-white">LA BANCA URUGUAY</h2>
+            </div>
+
+            <button
+              onClick={handleSyncLaBanca}
+              disabled={syncing}
+              className="py-2.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black tracking-wider flex items-center gap-2 shadow-lg transition active:scale-95"
+            >
+              <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Consultando...' : 'SINCRONIZAR AHORA'}
+            </button>
           </div>
+
+          <p className="text-xs text-gray-300 leading-relaxed">
+            Consulta los resultados oficiales en tiempo real. 
+            <span className="text-yellow-300 font-semibold ml-1">
+              Si los primeros 10 resultados coinciden con lo anterior, no se reenvía a la TV.
+            </span>
+          </p>
+
+          {/* Sync Feedback Message */}
+          {syncFeedback && (
+            <div className={`p-3 rounded-xl text-xs font-medium border flex flex-col gap-1.5 ${
+              syncFeedback.updated
+                ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-200'
+                : 'bg-amber-950/70 border-amber-500/50 text-amber-200'
+            }`}>
+              <div className="flex items-center gap-2 font-bold text-sm">
+                {syncFeedback.updated ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-400" />
+                    <span>¡Nuevos resultados detectados y emitidos al TV!</span>
+                  </>
+                ) : (
+                  <>
+                    <Info className="w-4 h-4 text-amber-400" />
+                    <span>Sin cambios en los primeros 10 resultados (no se reenvía)</span>
+                  </>
+                )}
+              </div>
+              <ul className="list-disc list-inside space-y-0.5 opacity-90 pl-1 text-[11px]">
+                {syncFeedback.details && Object.entries(syncFeedback.details).map(([k, msg]) => (
+                  <li key={k}><strong className="capitalize">{k}:</strong> {msg}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
 
         {/* Section Navigation Tabs */}
@@ -281,7 +341,9 @@ export function AdminPanel() {
                 <h2 className="text-base font-black text-emerald-400 uppercase tracking-wide">
                   Quiniela Vespertina
                 </h2>
-                <p className="text-xs text-gray-400">20 números de 3 cifras</p>
+                <p className="text-xs text-gray-400">
+                  Fecha del sorteo: <strong className="text-white">{data.quinielaVespertina?.fecha || 'Pendiente'}</strong>
+                </p>
               </div>
               <button
                 onClick={() => {
@@ -338,13 +400,14 @@ export function AdminPanel() {
                 <h2 className="text-base font-black text-red-400 uppercase tracking-wide">
                   Tómbola Vespertina
                 </h2>
-                <p className="text-xs text-gray-400">20 bolillas de 2 cifras</p>
+                <p className="text-xs text-gray-400">
+                  Fecha del sorteo: <strong className="text-white">{data.tombolaVespertina?.fecha || 'Pendiente'}</strong>
+                </p>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => sortTombola('tombolaVespertina')}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-xs font-bold text-yellow-400 rounded-lg transition"
-                  title="Ordenar de menor a mayor"
                 >
                   <ArrowUpDown className="w-3.5 h-3.5" />
                   Ordenar
@@ -362,7 +425,6 @@ export function AdminPanel() {
               </div>
             </div>
 
-            {/* 20 Inputs in 4 columns for compact mobile entry */}
             <div className="grid grid-cols-4 gap-2.5">
               {Array.from({ length: 20 }, (_, i) => {
                 const val = data.tombolaVespertina?.numeros?.[i] || '';
@@ -395,7 +457,9 @@ export function AdminPanel() {
                 <h2 className="text-base font-black text-emerald-400 uppercase tracking-wide">
                   Quiniela Nocturna
                 </h2>
-                <p className="text-xs text-gray-400">20 números de 3 cifras</p>
+                <p className="text-xs text-gray-400">
+                  Fecha del sorteo: <strong className="text-white">{data.quinielaNocturna?.fecha || 'Pendiente'}</strong>
+                </p>
               </div>
               <button
                 onClick={() => {
@@ -450,7 +514,9 @@ export function AdminPanel() {
                 <h2 className="text-base font-black text-red-400 uppercase tracking-wide">
                   Tómbola Nocturna
                 </h2>
-                <p className="text-xs text-gray-400">20 bolillas de 2 cifras</p>
+                <p className="text-xs text-gray-400">
+                  Fecha del sorteo: <strong className="text-white">{data.tombolaNocturna?.fecha || 'Pendiente'}</strong>
+                </p>
               </div>
               <div className="flex gap-2">
                 <button
@@ -504,7 +570,7 @@ export function AdminPanel() {
               <h2 className="text-base font-black text-blue-400 uppercase tracking-wide">
                 5 de Oro - Pozos Aproximados
               </h2>
-              <p className="text-xs text-gray-400">Montos y fecha del próximo sorteo</p>
+              <p className="text-xs text-gray-400">Montos y fecha del próximo sorteo oficial</p>
             </div>
 
             {/* Pozo de Oro */}
@@ -568,7 +634,7 @@ export function AdminPanel() {
                     }
                   });
                 }}
-                placeholder="Ej: Jueves 5, Domingo 8"
+                placeholder="Ej: Jueves 5, Lunes 23"
                 className="w-full bg-gray-950 text-white font-bold text-lg py-2.5 px-4 rounded-xl border border-gray-700 focus:border-blue-400 outline-none"
               />
             </div>
@@ -699,7 +765,7 @@ export function AdminPanel() {
               Pegar Bloque de Números
             </h3>
             <p className="text-xs text-gray-400">
-              Pega aquí la lista completa de números (de WhatsApp, web, etc.). El sistema extraerá automáticamente los 20 premios.
+              Pega aquí la lista completa de números. El sistema extraerá automáticamente los 20 premios.
             </p>
             <textarea
               rows={6}
