@@ -32,36 +32,46 @@ export function TVBoard() {
 
     fetchData();
 
-    // Connect to Server-Sent Events (SSE)
+    // Connect to Server-Sent Events (SSE) if supported
     const connectSSE = () => {
-      eventSource = new EventSource('/api/events');
+      if (typeof window === 'undefined' || !('EventSource' in window)) {
+        console.warn('EventSource no soportado en este navegador de TV. Usando actualización por sondeo.');
+        return;
+      }
 
-      eventSource.onopen = () => {
-        setConnected(true);
-      };
+      try {
+        eventSource = new EventSource('/api/events');
 
-      eventSource.onmessage = (event) => {
-        try {
-          const updated = JSON.parse(event.data);
-          setData(updated);
+        eventSource.onopen = () => {
           setConnected(true);
-        } catch (e) {
-          console.error('Error parsing SSE event:', e);
-        }
-      };
+        };
 
-      eventSource.onerror = () => {
-        setConnected(false);
-        if (eventSource) {
-          eventSource.close();
-        }
-        setTimeout(connectSSE, 5000);
-      };
+        eventSource.onmessage = (event) => {
+          try {
+            const updated = JSON.parse(event.data);
+            setData(updated);
+            setConnected(true);
+          } catch (e) {
+            console.error('Error parsing SSE event:', e);
+          }
+        };
+
+        eventSource.onerror = () => {
+          setConnected(false);
+          if (eventSource) {
+            eventSource.close();
+          }
+          setTimeout(connectSSE, 5000);
+        };
+      } catch (e) {
+        console.warn('Error iniciando EventSource:', e);
+      }
     };
 
     connectSSE();
 
-    fallbackInterval = setInterval(fetchData, 30000);
+    // Fallback polling every 10 seconds for TV browsers without SSE
+    fallbackInterval = setInterval(fetchData, 10000);
 
     return () => {
       if (eventSource) eventSource.close();
