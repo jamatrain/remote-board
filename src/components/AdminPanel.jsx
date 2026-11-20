@@ -23,7 +23,10 @@ import {
   SkipForward,
   SkipBack,
   Play,
-  Pause
+  Pause,
+  Lock,
+  Unlock,
+  Key
 } from 'lucide-react';
 
 export function AdminPanel() {
@@ -39,8 +42,83 @@ export function AdminPanel() {
   const [pasteText, setPasteText] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
 
+  // 4-Digit Security PIN State
+  const [pin, setPin] = useState(() => localStorage.getItem('kb_admin_pin') || '');
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('kb_admin_pin'));
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [changePinModalOpen, setChangePinModalOpen] = useState(false);
+  const [newPinInput, setNewPinInput] = useState('');
+  const [changePinSuccess, setChangePinSuccess] = useState(false);
+
   // References for auto-jumping inputs
   const inputsRef = useRef({});
+
+  const handleVerifyPin = async (e) => {
+    if (e) e.preventDefault();
+    if (!pinInput || pinInput.length !== 4) {
+      setPinError('El PIN debe tener 4 dígitos numéricos');
+      return;
+    }
+    try {
+      const res = await fetch('/api/verify-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: pinInput })
+      });
+      const json = await res.json();
+      if (json.valid) {
+        setPin(pinInput);
+        setIsAuthenticated(true);
+        localStorage.setItem('kb_admin_pin', pinInput);
+        setPinError('');
+      } else {
+        setPinError('PIN incorrecto. Reintentá.');
+      }
+    } catch (err) {
+      setPinError('Error al validar PIN: ' + err.message);
+    }
+  };
+
+  const handleChangePin = async (e) => {
+    if (e) e.preventDefault();
+    if (!newPinInput || newPinInput.length !== 4 || isNaN(Number(newPinInput))) {
+      alert('El nuevo PIN debe ser de 4 dígitos numéricos');
+      return;
+    }
+    try {
+      const res = await fetch('/api/change-pin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': pin
+        },
+        body: JSON.stringify({ newPin: newPinInput })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setPin(newPinInput);
+        localStorage.setItem('kb_admin_pin', newPinInput);
+        setChangePinSuccess(true);
+        setNewPinInput('');
+        setTimeout(() => {
+          setChangePinSuccess(false);
+          setChangePinModalOpen(false);
+        }, 1500);
+      } else {
+        alert(json.error || 'Error al cambiar PIN');
+      }
+    } catch (err) {
+      alert('Error de red al cambiar PIN');
+    }
+  };
+
+  const handleLogoutPin = () => {
+    localStorage.removeItem('kb_admin_pin');
+    setPin('');
+    setIsAuthenticated(false);
+    setPinInput('');
+  };
 
   const loadData = () => {
     fetch('/api/data')
@@ -64,9 +142,17 @@ export function AdminPanel() {
     try {
       const res = await fetch('/api/data', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-pin': pin
+        },
         body: JSON.stringify(data)
       });
+      if (res.status === 401) {
+        handleLogoutPin();
+        alert('PIN expirado o incorrecto. Por favor ingresá el PIN nuevamente.');
+        return;
+      }
       if (res.ok) {
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 2500);
@@ -78,24 +164,37 @@ export function AdminPanel() {
     }
   };
 
-  // Trigger sync with official La Banca API
+  // Trigger sync with official La Banca API (with 60s cooldown feedback)
   const handleSyncLaBanca = async () => {
     setSyncing(true);
     setSyncFeedback(null);
     try {
-      const res = await fetch('/api/sync', { method: 'POST' });
+      const res = await fetch('/api/sync', { 
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-pin': pin
+        }
+      });
+      if (res.status === 401) {
+        handleLogoutPin();
+        alert('PIN de seguridad incorrecto.');
+        return;
+      }
       const json = await res.json();
       if (json.success) {
-        setData(json.data);
+        if (json.data) setData(json.data);
         setSyncFeedback({
           updated: json.updated,
+          cooldown: json.cooldown,
+          message: json.message,
           details: json.details
         });
       } else {
-        alert('Error al sincronizar con La Banca: ' + (json.error || 'Error desconocido'));
+        alert('Error al sincronizar sorteos: ' + (json.error || 'Error desconocido'));
       }
     } catch (err) {
-      alert('Error de red al consultar La Banca: ' + err.message);
+      alert('Error de red al consultar sorteos: ' + err.message);
     } finally {
       setSyncing(false);
     }
@@ -107,9 +206,16 @@ export function AdminPanel() {
     try {
       const res = await fetch('/api/control', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-pin': pin
+        },
         body: JSON.stringify({ action, slideIndex })
       });
+      if (res.status === 401) {
+        handleLogoutPin();
+        return;
+      }
       if (res.ok) {
         setTvControlStatus(action === 'next' ? 'Siguiente enviado' : action === 'prev' ? 'Anterior enviado' : 'Comando enviado');
         setTimeout(() => setTvControlStatus(null), 1500);
@@ -266,6 +372,56 @@ export function AdminPanel() {
     );
   }
 
+  // 4-Digit PIN Security Gate
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-4 select-none">
+        <div className="w-full max-w-sm bg-gray-900 border-2 border-yellow-400/90 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-2xl bg-yellow-400 text-black flex items-center justify-center shadow-lg mb-4 animate-bounce">
+            <Lock className="w-8 h-8" />
+          </div>
+          <h1 className="text-xl font-black text-white tracking-wider uppercase mb-1">
+            KIOSKO BELVEDERE
+          </h1>
+          <p className="text-xs text-gray-400 mb-6">Panel de Control Protegido</p>
+
+          <form onSubmit={handleVerifyPin} className="w-full flex flex-col gap-4">
+            <div>
+              <label className="text-xs font-bold text-yellow-300 uppercase tracking-wider block mb-2">
+                Ingresá tu PIN de 4 dígitos
+              </label>
+              <input
+                type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={4}
+                autoFocus
+                value={pinInput}
+                onChange={(e) => {
+                  setPinInput(e.target.value.replace(/\D/g, '').slice(0, 4));
+                  setPinError('');
+                }}
+                placeholder="••••"
+                className="w-48 text-center text-4xl font-mono tracking-[0.4em] py-3 bg-gray-950 border-2 border-yellow-400 rounded-2xl text-white outline-none focus:ring-4 focus:ring-yellow-400/50 shadow-inner mx-auto block"
+              />
+              {pinError && (
+                <p className="text-xs font-bold text-red-400 mt-2">{pinError}</p>
+              )}
+              <p className="text-[11px] text-gray-500 mt-2">PIN inicial por defecto: 1234</p>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3.5 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-black font-black text-sm uppercase tracking-widest rounded-xl shadow-lg transition active:scale-95"
+            >
+              Desbloquear Panel
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col pb-28">
       {/* Top Header */}
@@ -275,10 +431,20 @@ export function AdminPanel() {
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
             PANEL DE CONTROL
           </h1>
-          <p className="text-xs text-gray-400">Cartelería Digital Remota</p>
+          <p className="text-xs text-gray-400">Kiosko Belvedere</p>
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Change PIN button */}
+          <button
+            onClick={() => setChangePinModalOpen(true)}
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-800 hover:bg-gray-700 active:bg-gray-750 text-yellow-300 rounded-lg text-xs font-bold transition shadow border border-yellow-400/30"
+            title="Cambiar PIN de seguridad"
+          >
+            <Key className="w-3.5 h-3.5" />
+            <span>PIN</span>
+          </button>
+
           <button
             onClick={copyTvLink}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-yellow-400 rounded-lg text-xs font-bold transition shadow"
@@ -1095,6 +1261,62 @@ export function AdminPanel() {
                 Cargar Números
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Modal to Change Security PIN */}
+      {changePinModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-gray-900 border-2 border-yellow-400 rounded-3xl w-full max-w-sm p-6 flex flex-col gap-4 shadow-2xl text-center">
+            <div className="w-12 h-12 rounded-xl bg-yellow-400 text-black flex items-center justify-center mx-auto shadow">
+              <Key className="w-6 h-6" />
+            </div>
+
+            <h3 className="text-base font-black text-white uppercase tracking-wider">
+              Cambiar PIN de Acceso
+            </h3>
+            <p className="text-xs text-gray-400">
+              Ingresá el nuevo PIN de 4 dígitos numéricos para proteger el panel de Kiosko Belvedere.
+            </p>
+
+            <form onSubmit={handleChangePin} className="flex flex-col gap-4">
+              <input
+                type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={4}
+                autoFocus
+                value={newPinInput}
+                onChange={(e) => setNewPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                placeholder="••••"
+                className="w-40 text-center text-3xl font-mono tracking-[0.4em] py-2.5 bg-gray-950 border-2 border-yellow-400 rounded-2xl text-white outline-none focus:ring-4 focus:ring-yellow-400/50 shadow-inner mx-auto block"
+              />
+
+              {changePinSuccess && (
+                <p className="text-xs font-bold text-emerald-400 animate-bounce">
+                  ✓ ¡PIN cambiado con éxito!
+                </p>
+              )}
+
+              <div className="flex gap-2 justify-center mt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setChangePinModalOpen(false);
+                    setNewPinInput('');
+                  }}
+                  className="px-4 py-2.5 bg-gray-800 text-gray-300 rounded-xl text-xs font-bold hover:bg-gray-700"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-yellow-400 text-black font-black rounded-xl text-xs hover:bg-yellow-300 shadow active:scale-95 transition"
+                >
+                  Guardar Nuevo PIN
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

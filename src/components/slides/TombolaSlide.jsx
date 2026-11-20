@@ -17,9 +17,11 @@ export function TombolaSlide({ turno = 'VESPERTINA', fecha = '19/11/26', numeros
     <div className="w-full h-full relative overflow-hidden flex flex-row bg-gradient-to-br from-[#d4141d] via-[#b80d15] to-[#8f050c] text-white select-none">
       
       {/* LEFT SIDEBAR: 26% width - EXACT REPLICA OF ABITAB/LA BANCA */}
-      <div className="w-[26%] h-full flex flex-col justify-between p-4 sm:p-6 border-r border-white/20 flex-shrink-0">
-        <div className="flex flex-col items-start w-full">
-          <TombolaLogo />
+      <div className="w-[26%] h-full flex flex-col justify-between p-4 sm:p-6 pl-6 sm:pl-8 border-r border-white/20 flex-shrink-0">
+        <div className="flex flex-col items-center w-full">
+          <div className="w-full flex justify-center">
+            <TombolaLogo />
+          </div>
 
           {/* Top Divider */}
           <div className="w-full h-[2px] bg-white my-3 opacity-90" />
@@ -34,8 +36,8 @@ export function TombolaSlide({ turno = 'VESPERTINA', fecha = '19/11/26', numeros
           {/* Bottom Divider */}
           <div className="w-full h-[2px] bg-white my-3 opacity-90" />
 
-          {/* Sorteo Del & Fecha */}
-          <div className="flex flex-col mt-2">
+          {/* Sorteo Del & Fecha: Centrado con el mismo margen que Turno */}
+          <div className="w-full text-center flex flex-col items-center mt-3">
             <span className="text-xs sm:text-sm font-bold text-white/90 tracking-widest uppercase">
               SORTEO DEL
             </span>

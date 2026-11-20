@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-20T14:55:43.104Z",
+  "updatedAt": "2026-11-20T16:17:01.351Z",
   "rotationSeconds": 60,
   "activeScreens": {
     "quinielaVespertina": true,
@@ -118,10 +118,10 @@
     {
       "id": "promo-1",
       "active": true,
-      "tag": "SUPER COMBO",
-      "titulo": "Refresco 600ml + Alfajor Marley",
+      "tag": "Coca cola de 600 cc",
+      "titulo": "Refresco 600ml ",
       "subtitulo": "¡La combinación perfecta para tu tarde!",
-      "precio": "$ 140",
+      "precio": "$ 75",
       "nota": "Kiosko Belvedere | ¡Vení a buscar el tuyo!",
       "tema": "orange"
     },
@@ -134,6 +134,26 @@
       "precio": "$ 120",
       "nota": "Hasta agotar stock | Kiosko Belvedere",
       "tema": "purple"
+    },
+    {
+      "id": "promo-1795191194660",
+      "active": true,
+      "tag": "SUPER PROMO",
+      "titulo": "Nueva Oferta",
+      "subtitulo": "Aprovechá hoy en Kiosko Belvedere",
+      "precio": "$ 100",
+      "nota": "Hasta agotar stock | Kiosko Belvedere",
+      "tema": "orange"
+    },
+    {
+      "id": "promo-1795191358624",
+      "active": true,
+      "tag": "Auriculares",
+      "titulo": "Auriculares desde 100 pesos !!!",
+      "subtitulo": "Aprovechá hoy en Kiosko Belvedere",
+      "precio": "$ 100",
+      "nota": "Hasta agotar stock | Kiosko Belvedere",
+      "tema": "orange"
     }
   ]
 }

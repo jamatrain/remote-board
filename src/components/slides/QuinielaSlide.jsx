@@ -17,15 +17,17 @@ export function QuinielaSlide({ turno = 'VESPERTINA', fecha = '19/11/26', numero
   return (
     <div className="w-full h-full relative overflow-hidden flex flex-row bg-gradient-to-br from-[#009e2e] via-[#007e24] to-[#005518] text-white select-none">
       
-      {/* LEFT SIDEBAR: 25% width - EXACT REPLICA OF ABITAB/LA BANCA */}
-      <div className="w-[26%] h-full flex flex-col justify-between p-4 sm:p-6 border-r border-white/20 flex-shrink-0">
-        <div className="flex flex-col items-start w-full">
-          <QuinielaLogo />
+      {/* LEFT SIDEBAR: 26% width - EXACT REPLICA OF ABITAB/LA BANCA */}
+      <div className="w-[26%] h-full flex flex-col justify-between p-4 sm:p-6 pl-6 sm:pl-8 border-r border-white/20 flex-shrink-0">
+        <div className="flex flex-col items-center w-full">
+          <div className="w-full flex justify-center">
+            <QuinielaLogo />
+          </div>
 
           {/* Top Divider */}
           <div className="w-full h-[2px] bg-white my-3 opacity-90" />
 
-          {/* Turno text: Vespertina / Nocturna (Directly between white lines, exactly as La Banca does) */}
+          {/* Turno text: Vespertina / Nocturna */}
           <div className="w-full py-1 text-center">
             <span className="text-2xl sm:text-3xl font-black tracking-widest text-white uppercase drop-shadow-sm">
               {turno}
@@ -35,8 +37,8 @@ export function QuinielaSlide({ turno = 'VESPERTINA', fecha = '19/11/26', numero
           {/* Bottom Divider */}
           <div className="w-full h-[2px] bg-white my-3 opacity-90" />
 
-          {/* Sorteo Del & Fecha */}
-          <div className="flex flex-col mt-2">
+          {/* Sorteo Del & Fecha: Centrado con el mismo margen que Turno */}
+          <div className="w-full text-center flex flex-col items-center mt-3">
             <span className="text-xs sm:text-sm font-bold text-white/90 tracking-widest uppercase">
               SORTEO DEL
             </span>

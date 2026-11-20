@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import { syncWithLaBanca } from './src/services/labanca.js';
 
@@ -87,12 +88,57 @@ function broadcastControl(command) {
   });
 }
 
+// Security: SHA-256 Hashing for 4-digit Admin PIN
+function hashPin(pin) {
+  return crypto.createHash('sha256').update(String(pin || '').trim()).digest('hex');
+}
+const DEFAULT_PIN_HASH = hashPin('1234');
+
+function verifyPinMiddleware(req, res, next) {
+  const current = readData();
+  const validHash = current.pinHash || DEFAULT_PIN_HASH;
+  const providedPin = req.headers['x-admin-pin'] || req.body?.adminPin || req.query?.pin;
+
+  if (!providedPin || hashPin(providedPin) !== validHash) {
+    return res.status(401).json({ success: false, error: 'PIN de seguridad incorrecto' });
+  }
+  next();
+}
+
+// Cooldown to protect La Banca API against abuse / DoS
+let lastSyncTimestamp = 0;
+const SYNC_COOLDOWN_MS = 60 * 1000; // 60s minimum interval
+
 // REST Endpoints
 app.get('/api/data', (req, res) => {
   res.json(readData());
 });
 
-app.post('/api/data', (req, res) => {
+// Check if a PIN is valid
+app.post('/api/verify-pin', (req, res) => {
+  const { pin } = req.body;
+  const current = readData();
+  const validHash = current.pinHash || DEFAULT_PIN_HASH;
+  const ok = (hashPin(pin) === validHash);
+  res.json({ success: ok, valid: ok });
+});
+
+// Change PIN (Requires current valid PIN)
+app.post('/api/change-pin', verifyPinMiddleware, (req, res) => {
+  const { newPin } = req.body;
+  if (!newPin || String(newPin).trim().length !== 4 || isNaN(Number(newPin))) {
+    return res.status(400).json({ success: false, error: 'El nuevo PIN debe ser exactamente de 4 dígitos numéricos' });
+  }
+  const current = readData();
+  const updated = {
+    ...current,
+    pinHash: hashPin(newPin)
+  };
+  saveData(updated);
+  res.json({ success: true, message: 'PIN actualizado exitosamente' });
+});
+
+app.post('/api/data', verifyPinMiddleware, (req, res) => {
   try {
     const current = readData();
     const updated = {
@@ -110,15 +156,28 @@ app.post('/api/data', (req, res) => {
 });
 
 // TV Remote Control Command (from iPhone to TV)
-app.post('/api/control', (req, res) => {
+app.post('/api/control', verifyPinMiddleware, (req, res) => {
   const { action, slideIndex } = req.body;
   broadcastControl({ action, slideIndex, timestamp: Date.now() });
   res.json({ success: true, command: { action, slideIndex } });
 });
 
-// Sync directly from official La Banca API
-app.post('/api/sync', async (req, res) => {
+// Sync directly from official La Banca API (Protected by PIN & 60s Anti-DoS Cooldown)
+app.post('/api/sync', verifyPinMiddleware, async (req, res) => {
   try {
+    const now = Date.now();
+    if (now - lastSyncTimestamp < SYNC_COOLDOWN_MS) {
+      const waitSec = Math.ceil((SYNC_COOLDOWN_MS - (now - lastSyncTimestamp)) / 1000);
+      return res.json({
+        success: true,
+        updated: false,
+        cooldown: true,
+        message: `Cooldown activo: esperá ${waitSec} segundos antes de volver a consultar los sorteos.`,
+        data: readData()
+      });
+    }
+
+    lastSyncTimestamp = now;
     const current = readData();
     const { result, updatedData } = await syncWithLaBanca(current);
 
