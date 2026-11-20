@@ -1,21 +1,14 @@
 import React from 'react';
 
-export function OfficialFooter({ textColor = "text-white/80" }) {
+export function OfficialFooter({ textColor = "text-white/90" }) {
   return (
     <div className={`w-full text-[11px] sm:text-xs select-none ${textColor} flex flex-col gap-1 tracking-wider`}>
       <div className="flex items-center gap-2">
-        <span className="font-semibold">Seguinos en:</span>
-        <span className="inline-flex gap-1.5 items-center">
-          <span className="bg-white/20 px-1 py-0.2 rounded font-bold text-[10px]">f</span>
-          <span className="bg-white/20 px-1 py-0.2 rounded font-bold text-[10px]">𝕏</span>
-          <span className="bg-white/20 px-1 py-0.2 rounded font-bold text-[10px]">ig</span>
-        </span>
-        <span className="opacity-90 font-medium">/LaBanca.JuegosOficiales</span>
+        <span className="font-black text-yellow-300 uppercase tracking-widest">🏪 Kiosko Belvedere</span>
+        <span className="opacity-90 font-medium">| Resultados Informativos</span>
       </div>
-      <div className="flex items-center gap-3">
-        <span className="font-bold text-white tracking-wide">📞 0800-2000</span>
-        <span>Prevención y ayuda al juego problemático</span>
-        <span className="hidden sm:inline font-semibold opacity-75">| Juegue responsablemente</span>
+      <div className="flex items-center gap-2 text-[10px] sm:text-[11px] opacity-80">
+        <span>Cartelería Digital Kiosko Belvedere • ¡Tu lugar de confianza en el barrio!</span>
       </div>
     </div>
   );

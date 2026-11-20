@@ -400,15 +400,15 @@ export function AdminPanel() {
           </div>
         </section>
 
-        {/* LA BANCA LIVE SYNC CARD */}
+        {/* SINCRONIZACIÓN DE RESULTADOS OFICIALES */}
         <section className="bg-gradient-to-r from-blue-950 via-indigo-950 to-slate-900 border border-blue-600/40 rounded-2xl p-4 shadow-xl flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div>
               <span className="text-[11px] font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping" />
-                Conexión Oficial
+                Sorteos Oficiales
               </span>
-              <h2 className="text-base font-black text-white">LA BANCA URUGUAY</h2>
+              <h2 className="text-base font-black text-white">RESULTADOS OFICIALES EN VIVO</h2>
             </div>
 
             <button
