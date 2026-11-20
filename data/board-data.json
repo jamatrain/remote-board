@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-20T14:16:08.574Z",
+  "updatedAt": "2026-11-20T14:28:14.066Z",
   "rotationSeconds": 60,
   "activeScreens": {
     "quinielaVespertina": true,
@@ -124,6 +124,16 @@
       "precio": "$ 140",
       "nota": "Kiosko Belvedere | ¡Vení a buscar el tuyo!",
       "tema": "orange"
+    },
+    {
+      "id": "promo-1795184859182",
+      "active": true,
+      "tag": "Cigarrillos ",
+      "titulo": "Coronado 10 $ 120 !!",
+      "subtitulo": "Aprovechá hoy en Kiosko Belvedere",
+      "precio": "$ 120",
+      "nota": "Hasta agotar stock | Kiosko Belvedere",
+      "tema": "purple"
     }
   ]
 }
