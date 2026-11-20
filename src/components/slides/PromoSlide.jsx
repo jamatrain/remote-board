@@ -8,7 +8,8 @@ export function PromoSlide({ promo = {} }) {
     subtitulo = 'Los mejores precios del barrio',
     precio = '',
     nota = 'Hasta agotar stock | Kiosko Belvedere',
-    tema = 'orange'
+    tema = 'orange',
+    modelo = 'inclinado'
   } = promo;
 
   // Background gradient based on theme
@@ -78,66 +79,207 @@ export function PromoSlide({ promo = {} }) {
         )}
       </div>
 
-      {/* CENTER: Main Title, Subtitle Badge & Giant Price Card */}
-      <div className="w-full max-w-5xl mx-auto my-auto z-10 flex flex-col items-center text-center gap-4 sm:gap-6 py-2">
-        
-        {/* 1. Main Title: PURE WHITE WITH EXPLICIT SHADOW (100% contrast, never black) */}
-        <h1 
-          className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight uppercase leading-[1.05] max-w-5xl"
-          style={{ 
-            color: '#ffffff', 
-            textShadow: '0 4px 14px rgba(0,0,0,0.95), 0 2px 4px rgba(0,0,0,0.95)' 
-          }}
-        >
-          {titulo}
-        </h1>
-
-        {/* 2. Subtitle: SOLID BLACK BADGE WITH NEON GOLD BORDER & BRIGHT YELLOW TEXT */}
-        {subtitulo && (
+      {/* CENTER: Variant Model 1 - INCLINADO / \ (Título inclinado hacia un lado, precio hacia el otro) */}
+      {modelo === 'inclinado' && (
+        <div className="w-full max-w-6xl mx-auto my-auto z-10 flex flex-col items-center text-center gap-5 sm:gap-7 py-2">
+          
+          {/* TÍTULO INCLINADO HACIA UN LADO (/) */}
           <div 
-            className="px-8 py-3 rounded-full shadow-2xl inline-block"
-            style={{ 
-              backgroundColor: '#0a0a0a', 
-              color: '#ffea00', 
-              border: '3px solid #ffea00',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.8)'
-            }}
+            className="transform -rotate-2 sm:-rotate-3 transition-transform duration-300"
+            style={{ transform: 'rotate(-2.5deg)' }}
           >
-            <p className="text-2xl sm:text-3xl md:text-4xl font-black tracking-wide drop-shadow">
-              {subtitulo}
-            </p>
-          </div>
-        )}
-
-        {/* 3. Price Card: SOLID WHITE WITH RED BORDER & VIBRANT PRICE */}
-        {precio && (
-          <div className="relative mt-2 animate-float-price">
-            {/* White card with intense red border */}
-            <div 
-              className="px-14 sm:px-20 py-3 sm:py-5 rounded-3xl shadow-2xl flex items-center justify-center"
+            <h1 
+              className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight uppercase leading-[1.05] max-w-5xl"
               style={{ 
-                backgroundColor: '#ffffff', 
-                color: '#d90429', 
-                border: '5px solid #ffea00',
-                boxShadow: '0 12px 35px rgba(0,0,0,0.6)'
+                color: '#ffffff', 
+                textShadow: '0 6px 18px rgba(0,0,0,0.95), 0 2px 4px rgba(0,0,0,0.95)' 
               }}
             >
-              <span className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tighter leading-none" style={{ color: '#d90429' }}>
-                {precio}
-              </span>
-            </div>
-
-            {/* Corner Starburst Sticker */}
-            <div 
-              className="absolute -top-4 -right-6 sm:-right-8 font-black text-xs sm:text-sm px-4 py-1.5 rounded-full uppercase tracking-wider shadow-2xl transform rotate-12 animate-pulse"
-              style={{ backgroundColor: '#ffea00', color: '#000000', border: '2px solid #ffffff' }}
-            >
-              💥 ¡SUPER PRECIO!
-            </div>
+              {titulo}
+            </h1>
           </div>
-        )}
 
-      </div>
+          {/* SUBTÍTULO / BAJADA */}
+          {subtitulo && (
+            <div 
+              className="px-8 py-3 rounded-full shadow-2xl inline-block transform rotate-1"
+              style={{ 
+                backgroundColor: '#0a0a0a', 
+                color: '#ffea00', 
+                border: '3px solid #ffea00',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.8)'
+              }}
+            >
+              <p className="text-2xl sm:text-3xl md:text-4xl font-black tracking-wide drop-shadow">
+                {subtitulo}
+              </p>
+            </div>
+          )}
+
+          {/* CARTEL DEL PRECIO INCLINADO HACIA EL OTRO LADO (\) */}
+          {precio && (
+            <div 
+              className="relative mt-2 animate-float-price transform rotate-3 sm:rotate-6 transition-transform duration-300"
+              style={{ transform: 'rotate(4.5deg)' }}
+            >
+              {/* White price box with neon yellow & red border */}
+              <div 
+                className="px-14 sm:px-20 py-3.5 sm:py-5 rounded-3xl shadow-2xl flex items-center justify-center"
+                style={{ 
+                  backgroundColor: '#ffffff', 
+                  color: '#d90429', 
+                  border: '6px solid #ffea00',
+                  boxShadow: '0 16px 40px rgba(0,0,0,0.7)'
+                }}
+              >
+                <span className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tighter leading-none" style={{ color: '#d90429' }}>
+                  {precio}
+                </span>
+              </div>
+
+              {/* Sticker superior derecho */}
+              <div 
+                className="absolute -top-5 -right-6 sm:-right-8 font-black text-xs sm:text-sm px-4 py-1.5 rounded-full uppercase tracking-wider shadow-2xl transform -rotate-12 animate-pulse"
+                style={{ backgroundColor: '#ffea00', color: '#000000', border: '2px solid #ffffff' }}
+              >
+                💥 ¡SÚPER PRECIO!
+              </div>
+
+              {/* Sticker inferior izquierdo */}
+              <div 
+                className="absolute -bottom-3 -left-4 font-black text-[10px] sm:text-xs px-3 py-1 rounded-full uppercase tracking-wider shadow-xl transform -rotate-6"
+                style={{ backgroundColor: '#d90429', color: '#ffffff', border: '2px solid #ffea00' }}
+              >
+                ★ OFERTÓN
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* CENTER: Variant Model 2 - DIVIDIDO (2 Columnas: Título a la izquierda, Precio gigante a la derecha) */}
+      {modelo === 'dividido' && (
+        <div className="w-full max-w-6xl mx-auto my-auto z-10 flex flex-col md:flex-row items-center justify-between gap-6 py-2 px-4">
+          
+          {/* Left Column: Título y Subtítulo */}
+          <div className="w-full md:w-3/5 flex flex-col items-center md:items-start text-center md:text-left gap-4">
+            <h1 
+              className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight uppercase leading-[1.08]"
+              style={{ 
+                color: '#ffffff', 
+                textShadow: '0 4px 14px rgba(0,0,0,0.95), 0 2px 4px rgba(0,0,0,0.95)' 
+              }}
+            >
+              {titulo}
+            </h1>
+
+            {subtitulo && (
+              <div 
+                className="px-6 py-2.5 rounded-2xl shadow-xl inline-block mt-1"
+                style={{ 
+                  backgroundColor: '#0a0a0a', 
+                  color: '#ffea00', 
+                  border: '3px solid #ffea00'
+                }}
+              >
+                <p className="text-xl sm:text-2xl md:text-3xl font-black tracking-wide">
+                  {subtitulo}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Giant Price Card */}
+          {precio && (
+            <div className="w-full md:w-2/5 flex justify-center items-center relative animate-float-price">
+              <div 
+                className="px-10 sm:px-14 py-6 sm:py-8 rounded-3xl shadow-2xl flex flex-col items-center justify-center text-center transform rotate-2"
+                style={{ 
+                  backgroundColor: '#ffffff', 
+                  border: '6px solid #ffea00',
+                  boxShadow: '0 16px 40px rgba(0,0,0,0.7)'
+                }}
+              >
+                <span className="text-[11px] sm:text-xs font-black uppercase tracking-widest text-red-600 mb-1">
+                  PRECIO ESPECIAL
+                </span>
+                <span className="text-6xl sm:text-7xl md:text-8xl font-black tracking-tighter leading-none" style={{ color: '#d90429' }}>
+                  {precio}
+                </span>
+              </div>
+
+              {/* Top Sticker */}
+              <div 
+                className="absolute -top-3 right-4 font-black text-xs sm:text-sm px-4 py-1.5 rounded-full uppercase tracking-wider shadow-xl transform rotate-12"
+                style={{ backgroundColor: '#ffea00', color: '#000000', border: '2px solid #ffffff' }}
+              >
+                ⚡ IMPERDIBLE
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* CENTER: Variant Model 3 - CLÁSICO (Cartel Recto y Centrado, el original mantenido) */}
+      {(!modelo || modelo === 'clasico') && (
+        <div className="w-full max-w-5xl mx-auto my-auto z-10 flex flex-col items-center text-center gap-4 sm:gap-6 py-2">
+          
+          {/* Main Title: Recto */}
+          <h1 
+            className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight uppercase leading-[1.05] max-w-5xl"
+            style={{ 
+              color: '#ffffff', 
+              textShadow: '0 4px 14px rgba(0,0,0,0.95), 0 2px 4px rgba(0,0,0,0.95)' 
+            }}
+          >
+            {titulo}
+          </h1>
+
+          {/* Subtitle */}
+          {subtitulo && (
+            <div 
+              className="px-8 py-3 rounded-full shadow-2xl inline-block"
+              style={{ 
+                backgroundColor: '#0a0a0a', 
+                color: '#ffea00', 
+                border: '3px solid #ffea00',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.8)'
+              }}
+            >
+              <p className="text-2xl sm:text-3xl md:text-4xl font-black tracking-wide drop-shadow">
+                {subtitulo}
+              </p>
+            </div>
+          )}
+
+          {/* Price Card: Recto */}
+          {precio && (
+            <div className="relative mt-2 animate-float-price">
+              <div 
+                className="px-14 sm:px-20 py-3 sm:py-5 rounded-3xl shadow-2xl flex items-center justify-center"
+                style={{ 
+                  backgroundColor: '#ffffff', 
+                  color: '#d90429', 
+                  border: '5px solid #ffea00',
+                  boxShadow: '0 12px 35px rgba(0,0,0,0.6)'
+                }}
+              >
+                <span className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tighter leading-none" style={{ color: '#d90429' }}>
+                  {precio}
+                </span>
+              </div>
+
+              {/* Corner Starburst Sticker */}
+              <div 
+                className="absolute -top-4 -right-6 sm:-right-8 font-black text-xs sm:text-sm px-4 py-1.5 rounded-full uppercase tracking-wider shadow-2xl transform rotate-12 animate-pulse"
+                style={{ backgroundColor: '#ffea00', color: '#000000', border: '2px solid #ffffff' }}
+              >
+                💥 ¡SUPER PRECIO!
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* BOTTOM TICKER / MARQUEE: ONE SINGLE SOLID HIGH-CONTRAST BANNER (NO OVERLAPPING BARS) */}
       <div className="w-full z-10 mb-1">

@@ -81,7 +81,8 @@ export function AdminPanel() {
     subtitulo: 'Aprovechá hoy en Kiosko Belvedere',
     precio: '$ 100',
     nota: 'Hasta agotar stock | Kiosko Belvedere',
-    tema: 'orange'
+    tema: 'orange',
+    modelo: 'inclinado'
   });
 
   // References for auto-jumping inputs
@@ -383,7 +384,8 @@ export function AdminPanel() {
       subtitulo: 'Aprovechá hoy en Kiosko Belvedere',
       precio: '$ 100',
       nota: 'Hasta agotar stock | Kiosko Belvedere',
-      tema: 'orange'
+      tema: 'orange',
+      modelo: 'inclinado'
     });
     setPromoModalOpen(true);
   };
@@ -397,7 +399,8 @@ export function AdminPanel() {
       subtitulo: existing.subtitulo || 'Aprovechá hoy en Kiosko Belvedere',
       precio: existing.precio || '$ 100',
       nota: existing.nota || 'Hasta agotar stock | Kiosko Belvedere',
-      tema: existing.tema || 'orange'
+      tema: existing.tema || 'orange',
+      modelo: existing.modelo || 'clasico'
     });
     setPromoModalOpen(true);
   };
@@ -1234,7 +1237,7 @@ export function AdminPanel() {
                     </div>
 
                     {/* Inputs */}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       <div>
                         <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
                           Etiqueta (Badge)
@@ -1246,6 +1249,21 @@ export function AdminPanel() {
                           placeholder="SUPER PROMO, OFERTA, COMBO"
                           className="w-full bg-gray-900 text-white text-xs font-bold py-1.5 px-2.5 rounded-lg border border-gray-700 focus:border-amber-400 outline-none"
                         />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
+                          Diseño / Modelo
+                        </label>
+                        <select
+                          value={promo.modelo || 'inclinado'}
+                          onChange={(e) => updatePromoSlide(idx, 'modelo', e.target.value)}
+                          className="w-full bg-gray-900 text-white text-xs font-bold py-1.5 px-2 rounded-lg border border-gray-700 focus:border-amber-400 outline-none"
+                        >
+                          <option value="inclinado">⚡ Inclinado / \</option>
+                          <option value="clasico">🏷️ Clásico Recto</option>
+                          <option value="dividido">📦 2 Columnas</option>
+                        </select>
                       </div>
 
                       <div>
@@ -1652,6 +1670,53 @@ export function AdminPanel() {
                   placeholder="Hasta agotar stock | Kiosko Belvedere"
                   className="w-full bg-gray-950 text-gray-300 text-xs py-2 px-3 rounded-xl border border-gray-700 focus:border-amber-400 outline-none"
                 />
+              </div>
+
+              {/* Selector de Modelo / Estilo de Diseño del Anuncio */}
+              <div className="flex flex-col gap-2 pt-1">
+                <label className="text-xs font-bold text-yellow-400 uppercase tracking-wider flex items-center justify-between">
+                  <span>Modelo / Estilo de Diseño</span>
+                  <span className="text-[11px] text-gray-300 font-bold">
+                    {promoDraft.modelo === 'inclinado' ? '⚡ Inclinado / \\' :
+                     promoDraft.modelo === 'dividido' ? '📦 2 Columnas' : '🏷️ Clásico Recto'}
+                  </span>
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { 
+                      id: 'inclinado', 
+                      title: '⚡ Inclinado / \\', 
+                      desc: 'Título inclinado / y precio \\' 
+                    },
+                    { 
+                      id: 'clasico', 
+                      title: '🏷️ Clásico', 
+                      desc: 'Cartel recto y centrado' 
+                    },
+                    { 
+                      id: 'dividido', 
+                      title: '📦 2 Columnas', 
+                      desc: 'Texto izq, precio der' 
+                    }
+                  ].map((m) => {
+                    const isSel = (promoDraft.modelo || 'inclinado') === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => setPromoDraft({ ...promoDraft, modelo: m.id })}
+                        className={`p-2.5 rounded-xl border-2 transition text-left flex flex-col justify-between ${
+                          isSel 
+                            ? 'bg-amber-500/20 border-yellow-400 text-white ring-2 ring-yellow-400/40 shadow' 
+                            : 'bg-gray-950/70 border-gray-800 text-gray-400 hover:border-gray-700'
+                        }`}
+                      >
+                        <span className="text-xs font-black block text-white">{m.title}</span>
+                        <span className="text-[10px] text-gray-400 block mt-0.5 leading-tight">{m.desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Selector de Color de Fondo */}
