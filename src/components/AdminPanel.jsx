@@ -6,6 +6,7 @@ import {
   Copy, 
   Check, 
   AlertCircle, 
+  AlertTriangle,
   Sparkles, 
   ArrowUpDown, 
   ClipboardPaste,
@@ -28,6 +29,7 @@ import {
   Unlock,
   Key
 } from 'lucide-react';
+import { syncWithLaBancaClient } from '../utils/labancaClient';
 
 export function AdminPanel() {
   const [data, setData] = useState(null);
@@ -204,11 +206,37 @@ export function AdminPanel() {
     }
   };
 
-  // Trigger sync with official La Banca API (with 60s cooldown feedback)
+  // Trigger sync with official La Banca API (Direct client fetch in Uruguay + Cloud server fallback)
   const handleSyncLaBanca = async () => {
     setSyncing(true);
     setSyncFeedback(null);
     try {
+      // 1. INTENTO DIRECTO DESDE EL NAVEGADOR (IP Local Uruguaya - sin bloqueo de Cloudflare en Render)
+      try {
+        const clientRes = await syncWithLaBancaClient(data);
+        if (clientRes && !clientRes.error) {
+          if (clientRes.result.updated) {
+            setData(clientRes.updatedData);
+            await handleSave(clientRes.updatedData);
+            setSyncFeedback({
+              updated: true,
+              details: clientRes.result.details,
+              message: '¡Nuevos resultados detectados y emitidos al TV!'
+            });
+          } else {
+            setSyncFeedback({
+              updated: false,
+              details: clientRes.result.details,
+              message: 'Resultados oficiales verificados: coinciden con los que ya están en pantalla.'
+            });
+          }
+          return;
+        }
+      } catch (clientErr) {
+        console.warn('Sync directo desde navegador falló, recurriendo al servidor:', clientErr);
+      }
+
+      // 2. FALLBACK AL SERVIDOR EN CASO DE ERROR EN CLIENTE
       const res = await fetch('/api/sync', { 
         method: 'POST',
         headers: { 
@@ -226,14 +254,17 @@ export function AdminPanel() {
         if (json.error) {
           setSyncFeedback({
             updated: false,
-            message: 'La Banca bloqueó la conexión automática desde la nube (' + json.error + '). Podés usar "Pegar Bloque" para cargarlos al instante.'
+            hasError: true,
+            message: `Aviso de conexión con La Banca (${json.error}). Si la API está temporalmente inaccesible, podés cargar los sorteos con "Pegar Bloque".`
           });
         } else {
           if (json.data) setData(json.data);
           setSyncFeedback({
             updated: json.updated,
             cooldown: json.cooldown,
-            message: json.message,
+            message: json.updated 
+              ? '¡Nuevos resultados detectados y emitidos al TV!' 
+              : 'Resultados oficiales verificados: coinciden con los que ya están en pantalla.',
             details: json.details
           });
         }
@@ -767,26 +798,35 @@ export function AdminPanel() {
             <div className={`p-3 rounded-xl text-xs font-medium border flex flex-col gap-1.5 ${
               syncFeedback.updated
                 ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-200'
+                : syncFeedback.hasError
+                ? 'bg-red-950/70 border-red-500/50 text-red-200'
                 : 'bg-amber-950/70 border-amber-500/50 text-amber-200'
             }`}>
               <div className="flex items-center gap-2 font-bold text-sm">
                 {syncFeedback.updated ? (
                   <>
                     <Check className="w-4 h-4 text-emerald-400" />
-                    <span>¡Nuevos resultados detectados y emitidos al TV!</span>
+                    <span>{syncFeedback.message || '¡Nuevos resultados detectados y emitidos al TV!'}</span>
+                  </>
+                ) : syncFeedback.hasError ? (
+                  <>
+                    <AlertTriangle className="w-4 h-4 text-red-400" />
+                    <span>{syncFeedback.message}</span>
                   </>
                 ) : (
                   <>
                     <Info className="w-4 h-4 text-amber-400" />
-                    <span>Sin cambios en los primeros 10 resultados (no se reenvía)</span>
+                    <span>{syncFeedback.message || 'Resultados verificados: coinciden con la pantalla'}</span>
                   </>
                 )}
               </div>
-              <ul className="list-disc list-inside space-y-0.5 opacity-90 pl-1 text-[11px]">
-                {syncFeedback.details && Object.entries(syncFeedback.details).map(([k, msg]) => (
-                  <li key={k}><strong className="capitalize">{k}:</strong> {msg}</li>
-                ))}
-              </ul>
+              {syncFeedback.details && Object.keys(syncFeedback.details).length > 0 && (
+                <ul className="list-disc list-inside space-y-0.5 opacity-90 pl-1 text-[11px]">
+                  {Object.entries(syncFeedback.details).map(([k, msg]) => (
+                    <li key={k}><strong className="capitalize">{k}:</strong> {msg}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
         </section>
