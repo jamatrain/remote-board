@@ -376,72 +376,79 @@ export function TVBoard() {
           </div>
         )}
 
-        {/* Floating Quick On-Screen TV Controls */}
-        <div className="absolute top-3 right-3 z-50 flex items-center gap-2 bg-black/85 px-3 py-1.5 rounded-xl border border-white/30 shadow-2xl">
-          {(!connected || isPaused) && (
-            <span className="text-[11px] font-black text-amber-400 mr-1 uppercase">
-              {!connected ? '📶 Modo Autónomo' : '⏸ Pausado'}
+        {/* Floating Quick On-Screen TV Controls: Hidden by default, reveals on hover */}
+        <div className="absolute top-0 right-0 p-3 z-50 group">
+          <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-300 flex items-center gap-2 bg-black/85 px-3 py-1.5 rounded-xl border border-white/30 shadow-2xl">
+            {(!connected || isPaused) && (
+              <span className="text-[11px] font-black text-amber-400 mr-1 uppercase">
+                {!connected ? '📶 Modo Autónomo' : '⏸ Pausado'}
+              </span>
+            )}
+
+            <span className="text-xs font-bold text-yellow-300 mr-1 whitespace-nowrap">
+              {activeSlide.title} ({currentSlideIndex + 1}/{slides.length})
             </span>
-          )}
 
-          <span className="text-xs font-bold text-yellow-300 mr-1 whitespace-nowrap">
-            {activeSlide.title} ({currentSlideIndex + 1}/{slides.length})
-          </span>
+            {/* Botón manual Anterior */}
+            <button
+              onClick={handlePrev}
+              className="p-1.5 hover:bg-white/20 active:bg-white/30 text-white rounded-lg transition"
+              title="Pantalla Anterior"
+            >
+              <SkipBack className="w-4 h-4" />
+            </button>
 
-          {/* Botón manual Anterior */}
-          <button
-            onClick={handlePrev}
-            className="p-1.5 hover:bg-white/20 active:bg-white/30 text-white rounded-lg transition"
-            title="Pantalla Anterior"
-          >
-            <SkipBack className="w-4 h-4" />
-          </button>
+            {/* Botón manual Pausar / Reanudar */}
+            <button
+              onClick={() => setIsPaused(p => !p)}
+              className="p-1.5 hover:bg-white/20 active:bg-white/30 text-yellow-400 rounded-lg transition"
+              title={isPaused ? "Reanudar giro automático" : "Pausar giro"}
+            >
+              {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+            </button>
 
-          {/* Botón manual Pausar / Reanudar */}
-          <button
-            onClick={() => setIsPaused(p => !p)}
-            className="p-1.5 hover:bg-white/20 active:bg-white/30 text-yellow-400 rounded-lg transition"
-            title={isPaused ? "Reanudar giro automático" : "Pausar giro"}
-          >
-            {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-          </button>
+            {/* Botón manual Siguiente */}
+            <button
+              onClick={handleNext}
+              className="flex items-center gap-1 py-1 px-2.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-lg text-xs font-black shadow transition"
+              title="Siguiente Pantalla"
+            >
+              <span>Siguiente</span>
+              <SkipForward className="w-3.5 h-3.5" />
+            </button>
 
-          {/* Botón manual Siguiente */}
+            {/* Botón Pantalla Completa seguro */}
+            <button
+              onClick={toggleFullscreen}
+              className="p-1.5 hover:bg-white/20 active:bg-white/30 text-cyan-300 rounded-lg transition ml-1"
+              title="Pantalla Completa"
+            >
+              {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Big On-Screen Next Arrow: Hidden by default, reveals when hovering near the right edge */}
+        <div className="absolute right-0 top-0 bottom-0 w-24 z-40 flex items-center justify-end pr-3 group pointer-events-auto">
           <button
             onClick={handleNext}
-            className="flex items-center gap-1 py-1 px-2.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-lg text-xs font-black shadow transition"
-            title="Siguiente Pantalla"
+            className="opacity-0 group-hover:opacity-100 p-3 bg-black/60 hover:bg-black/90 active:scale-95 text-yellow-300 rounded-full border border-yellow-400/60 shadow-2xl transition-all duration-300"
+            title="Avanzar a la siguiente pantalla"
           >
-            <span>Siguiente</span>
-            <SkipForward className="w-3.5 h-3.5" />
-          </button>
-
-          {/* Botón Pantalla Completa seguro */}
-          <button
-            onClick={toggleFullscreen}
-            className="p-1.5 hover:bg-white/20 active:bg-white/30 text-cyan-300 rounded-lg transition ml-1"
-            title="Pantalla Completa"
-          >
-            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+            <ChevronRight className="w-8 h-8" />
           </button>
         </div>
 
-        {/* Big On-Screen Next/Prev Arrows for easy mouse/remote click */}
-        <button
-          onClick={handleNext}
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-40 p-2.5 bg-black/40 hover:bg-black/80 active:scale-95 text-yellow-300 rounded-full border border-yellow-400/50 shadow-xl transition"
-          title="Avanzar a la siguiente pantalla"
-        >
-          <ChevronRight className="w-7 h-7" />
-        </button>
-
-        <button
-          onClick={handlePrev}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-40 p-2.5 bg-black/40 hover:bg-black/80 active:scale-95 text-yellow-300 rounded-full border border-yellow-400/50 shadow-xl transition"
-          title="Volver a la pantalla anterior"
-        >
-          <ChevronLeft className="w-7 h-7" />
-        </button>
+        {/* Big On-Screen Prev Arrow: Hidden by default, reveals when hovering near the left edge */}
+        <div className="absolute left-0 top-0 bottom-0 w-24 z-40 flex items-center justify-start pl-3 group pointer-events-auto">
+          <button
+            onClick={handlePrev}
+            className="opacity-0 group-hover:opacity-100 p-3 bg-black/60 hover:bg-black/90 active:scale-95 text-yellow-300 rounded-full border border-yellow-400/60 shadow-2xl transition-all duration-300"
+            title="Volver a la pantalla anterior"
+          >
+            <ChevronLeft className="w-8 h-8" />
+          </button>
+        </div>
 
         {/* Current Active Slide */}
         <div key={activeSlide.id} className="w-full h-full">
