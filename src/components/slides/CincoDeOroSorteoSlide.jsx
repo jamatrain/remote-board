@@ -68,7 +68,7 @@ export function CincoDeOroSorteoSlide({
 
           {/* Turno text: SORTEO between white lines */}
           <div className="w-full py-1 text-center">
-            <span className="text-2xl sm:text-3xl font-black tracking-widest text-white uppercase drop-shadow-sm">
+            <span className="text-2xl sm:text-3xl font-black tracking-widest text-white uppercase">
               SORTEO
             </span>
           </div>
@@ -78,10 +78,10 @@ export function CincoDeOroSorteoSlide({
 
           {/* Sorteo Del & Fecha */}
           <div className="w-full text-center flex flex-col items-center mt-3">
-            <span className="text-xs sm:text-sm font-black text-yellow-300 tracking-widest uppercase drop-shadow">
+            <span className="text-xs sm:text-sm font-black text-yellow-300 tracking-widest uppercase">
               SORTEO DEL
             </span>
-            <span className="text-3xl sm:text-4xl font-black text-white tracking-wider drop-shadow mt-0.5">
+            <span className="text-3xl sm:text-4xl font-black text-white tracking-wider mt-0.5">
               {fecha || '--/--/--'}
             </span>
             {diaSemana && (
@@ -106,7 +106,7 @@ export function CincoDeOroSorteoSlide({
           <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-yellow-400 shadow-[0_0_8px_#facc15]" />
-              <h2 className="text-xl sm:text-2xl font-black text-yellow-300 tracking-wider uppercase drop-shadow-md">
+              <h2 className="text-xl sm:text-2xl font-black text-yellow-300 tracking-wider uppercase">
                 POZO DE ORO
               </h2>
             </div>
@@ -136,7 +136,7 @@ export function CincoDeOroSorteoSlide({
             ))}
 
             {/* Separador visual */}
-            <div className="flex items-center justify-center px-1 text-yellow-300 font-black text-2xl sm:text-3xl flex-shrink-0 drop-shadow">
+            <div className="flex items-center justify-center px-1 text-yellow-300 font-black text-2xl sm:text-3xl flex-shrink-0">
               +
             </div>
 
@@ -157,7 +157,7 @@ export function CincoDeOroSorteoSlide({
           <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_8px_#f59e0b]" />
-              <h2 className="text-xl sm:text-2xl font-black text-amber-300 tracking-wider uppercase drop-shadow-md">
+              <h2 className="text-xl sm:text-2xl font-black text-amber-300 tracking-wider uppercase">
                 POZO REVANCHA
               </h2>
             </div>
@@ -190,7 +190,7 @@ export function CincoDeOroSorteoSlide({
         {/* 3. BANNER INFERIOR: PRÓXIMOS POZOS ESTIMADOS (Alta Legibilidad y Contraste Luminoso) */}
         <div className="w-full bg-gradient-to-r from-blue-950 via-indigo-900 to-blue-950 border-2 border-yellow-400 rounded-2xl px-6 py-3.5 flex items-center justify-between text-white shadow-2xl">
           <div className="flex items-center gap-3">
-            <span className="text-xs sm:text-sm font-black text-yellow-300 uppercase tracking-widest flex items-center gap-1.5 drop-shadow">
+            <span className="text-xs sm:text-sm font-black text-yellow-300 uppercase tracking-widest flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse shadow-[0_0_8px_#facc15]" />
               PRÓXIMO SORTEO:
             </span>
@@ -204,7 +204,7 @@ export function CincoDeOroSorteoSlide({
               <span className="text-xs sm:text-sm font-black text-yellow-300 uppercase tracking-wider">
                 Pozo de Oro:
               </span>
-              <span className="text-base sm:text-2xl font-black text-white tracking-tight drop-shadow">
+              <span className="text-base sm:text-2xl font-black text-white tracking-tight">
                 {pozoOro}
               </span>
             </div>
@@ -213,7 +213,7 @@ export function CincoDeOroSorteoSlide({
               <span className="text-xs sm:text-sm font-black text-amber-300 uppercase tracking-wider">
                 Revancha:
               </span>
-              <span className="text-base sm:text-2xl font-black text-white tracking-tight drop-shadow">
+              <span className="text-base sm:text-2xl font-black text-white tracking-tight">
                 {pozoRevancha}
               </span>
             </div>

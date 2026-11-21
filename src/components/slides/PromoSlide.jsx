@@ -110,7 +110,7 @@ export function PromoSlide({ promo = {} }) {
                 boxShadow: '0 8px 24px rgba(0,0,0,0.8)'
               }}
             >
-              <p className="text-2xl sm:text-3xl md:text-4xl font-black tracking-wide drop-shadow">
+              <p className="text-2xl sm:text-3xl md:text-4xl font-black tracking-wide">
                 {subtitulo}
               </p>
             </div>
@@ -246,7 +246,7 @@ export function PromoSlide({ promo = {} }) {
                 boxShadow: '0 8px 24px rgba(0,0,0,0.8)'
               }}
             >
-              <p className="text-2xl sm:text-3xl md:text-4xl font-black tracking-wide drop-shadow">
+              <p className="text-2xl sm:text-3xl md:text-4xl font-black tracking-wide">
                 {subtitulo}
               </p>
             </div>

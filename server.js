@@ -165,13 +165,17 @@ app.post('/api/control', verifyPinMiddleware, (req, res) => {
   else if (action === 'resume') isPaused = false;
   else if (action === 'togglePause') isPaused = !isPaused;
 
+  const command = { action, slideIndex, isPaused, id: Date.now() };
+
   const updated = {
     ...current,
-    isPaused
+    isPaused,
+    lastCommand: command,
+    updatedAt: new Date().toISOString()
   };
   saveData(updated);
-  broadcastControl({ action, slideIndex, isPaused, timestamp: Date.now() });
-  res.json({ success: true, command: { action, slideIndex, isPaused } });
+  broadcastControl(command);
+  res.json({ success: true, command });
 });
 
 // Sync directly from official La Banca API (Protected by PIN & 60s Anti-DoS Cooldown)
@@ -217,8 +221,9 @@ app.post('/api/sync', verifyPinMiddleware, async (req, res) => {
 // SSE endpoint for live updates to the TV screen
 app.get('/api/events', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
 
   const clientId = Date.now();
@@ -228,10 +233,14 @@ app.get('/api/events', (req, res) => {
   // Send initial data immediately
   res.write(`data: ${JSON.stringify(readData())}\n\n`);
 
-  // Keep-alive ping every 25 seconds
+  // Keep-alive ping every 15 seconds
   const pingInterval = setInterval(() => {
-    res.write(': ping\n\n');
-  }, 25000);
+    try {
+      res.write(': ping\n\n');
+    } catch (e) {
+      clearInterval(pingInterval);
+    }
+  }, 15000);
 
   req.on('close', () => {
     clearInterval(pingInterval);

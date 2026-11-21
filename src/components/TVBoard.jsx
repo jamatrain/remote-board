@@ -24,6 +24,7 @@ export function TVBoard() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const slidesCountRef = useRef(1);
+  const lastProcessedCmdIdRef = useRef(null);
 
   // Helper to persist data to localStorage
   const updateDataWithCache = (newData) => {
@@ -39,6 +40,38 @@ export function TVBoard() {
     }
   };
 
+  // Safe executor for remote commands (from SSE or Polling fallback)
+  const executeControlCommand = (cmd) => {
+    if (!cmd || !cmd.action) return;
+    if (cmd.id && lastProcessedCmdIdRef.current === cmd.id) return;
+    if (cmd.id) lastProcessedCmdIdRef.current = cmd.id;
+
+    const count = slidesCountRef.current || 1;
+    if (cmd.action === 'reload') {
+      window.location.reload();
+      return;
+    }
+    if (cmd.action === 'next') {
+      setCurrentSlideIndex(prev => (prev + 1) % count);
+      setProgress(0);
+    } else if (cmd.action === 'prev') {
+      setCurrentSlideIndex(prev => (prev - 1 + count) % count);
+      setProgress(0);
+    } else if (cmd.action === 'pause') {
+      setIsPaused(true);
+    } else if (cmd.action === 'resume') {
+      setIsPaused(false);
+    } else if (cmd.action === 'togglePause') {
+      setIsPaused(typeof cmd.isPaused === 'boolean' ? cmd.isPaused : p => !p);
+    } else if (cmd.action === 'goto' && typeof cmd.slideIndex === 'number') {
+      setCurrentSlideIndex(cmd.slideIndex % count);
+      setProgress(0);
+    }
+    if (typeof cmd.isPaused === 'boolean') {
+      setIsPaused(cmd.isPaused);
+    }
+  };
+
   // Load initial data and connect to SSE
   useEffect(() => {
     let eventSource = null;
@@ -46,9 +79,12 @@ export function TVBoard() {
 
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/data');
+        const res = await fetch('/api/data?t=' + Date.now());
         if (res.ok) {
           const json = await res.json();
+          if (json.lastCommand) {
+            executeControlCommand(json.lastCommand);
+          }
           updateDataWithCache(json);
           setConnected(true);
         }
@@ -93,30 +129,7 @@ export function TVBoard() {
             
             // Check if this is a remote control command from iPhone
             if (payload && payload._type === 'control') {
-              const count = slidesCountRef.current || 1;
-              if (payload.action === 'reload') {
-                window.location.reload();
-                return;
-              }
-              if (payload.action === 'next') {
-                setCurrentSlideIndex(prev => (prev + 1) % count);
-                setProgress(0);
-              } else if (payload.action === 'prev') {
-                setCurrentSlideIndex(prev => (prev - 1 + count) % count);
-                setProgress(0);
-              } else if (payload.action === 'pause') {
-                setIsPaused(true);
-              } else if (payload.action === 'resume') {
-                setIsPaused(false);
-              } else if (payload.action === 'togglePause') {
-                setIsPaused(typeof payload.isPaused === 'boolean' ? payload.isPaused : p => !p);
-              } else if (payload.action === 'goto' && typeof payload.slideIndex === 'number') {
-                setCurrentSlideIndex(payload.slideIndex % count);
-                setProgress(0);
-              }
-              if (typeof payload.isPaused === 'boolean') {
-                setIsPaused(payload.isPaused);
-              }
+              executeControlCommand(payload);
               return;
             }
 
@@ -133,7 +146,7 @@ export function TVBoard() {
           if (eventSource) {
             eventSource.close();
           }
-          setTimeout(connectSSE, 10000);
+          setTimeout(connectSSE, 3000);
         };
       } catch (e) {
         console.warn('Error iniciando EventSource:', e);
@@ -142,8 +155,8 @@ export function TVBoard() {
 
     connectSSE();
 
-    // Fallback polling (tries every 15s when offline/online)
-    fallbackInterval = setInterval(fetchData, 15000);
+    // High-responsiveness fallback polling (every 3s) so remote controls always work
+    fallbackInterval = setInterval(fetchData, 3000);
 
     return () => {
       if (eventSource) eventSource.close();

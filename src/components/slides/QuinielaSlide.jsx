@@ -29,7 +29,7 @@ export function QuinielaSlide({ turno = 'VESPERTINA', fecha = '19/11/26', numero
 
           {/* Turno text: Vespertina / Nocturna */}
           <div className="w-full py-1 text-center">
-            <span className="text-2xl sm:text-3xl font-black tracking-widest text-white uppercase drop-shadow-sm">
+            <span className="text-2xl sm:text-3xl font-black tracking-widest text-white uppercase">
               {turno}
             </span>
           </div>
@@ -42,7 +42,7 @@ export function QuinielaSlide({ turno = 'VESPERTINA', fecha = '19/11/26', numero
             <span className="text-xs sm:text-sm font-bold text-white/90 tracking-widest uppercase">
               SORTEO DEL
             </span>
-            <span className="text-3xl sm:text-4xl font-black text-white tracking-wider drop-shadow-sm mt-0.5">
+            <span className="text-3xl sm:text-4xl font-black text-white tracking-wider mt-0.5">
               {fecha || '--/--/--'}
             </span>
           </div>

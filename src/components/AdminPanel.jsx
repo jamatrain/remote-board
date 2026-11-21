@@ -347,11 +347,12 @@ export function AdminPanel() {
 
   const sendTvControl = async (action, slideIndex = null) => {
     try {
+      const authPin = pin || localStorage.getItem('kb_admin_pin') || '4355';
       const res = await fetch('/api/control', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-admin-pin': pin
+          'x-admin-pin': authPin
         },
         body: JSON.stringify({ action, slideIndex })
       });
