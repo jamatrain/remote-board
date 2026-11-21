@@ -27,13 +27,37 @@ import {
   Pause,
   Lock,
   Unlock,
-  Key
+  Key,
+  Database,
+  Download,
+  Upload,
+  HardDrive,
+  CheckCircle2
 } from 'lucide-react';
 import { syncWithLaBancaClient } from '../utils/labancaClient';
+import { 
+  getLocalData, 
+  saveLocalData, 
+  hasLocalData, 
+  exportBackupJson, 
+  importBackupJson, 
+  clearLocalData, 
+  reconcileData 
+} from '../utils/localStore';
 
 export function AdminPanel() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(() => getLocalData());
+  const [loading, setLoading] = useState(() => !hasLocalData());
+  const [localDbStatus, setLocalDbStatus] = useState(() => hasLocalData() ? 'cached' : 'empty');
+  const [localSavedDate, setLocalSavedDate] = useState(() => {
+    const local = getLocalData();
+    if (local?._localSavedAt) {
+      const d = new Date(local._localSavedAt);
+      return `${d.toLocaleDateString('es-UY')} ${d.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' })}`;
+    }
+    return null;
+  });
+  const fileInputRef = useRef(null);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -156,17 +180,44 @@ export function AdminPanel() {
     setPinInput('');
   };
 
-  const loadData = () => {
-    fetch('/api/data')
-      .then((res) => res.json())
-      .then((json) => {
-        setData(json);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error fetching data:', err);
-        setLoading(false);
-      });
+  const loadData = async () => {
+    try {
+      const res = await fetch('/api/data');
+      if (res.ok) {
+        const serverJson = await res.json();
+        const localJson = getLocalData();
+        const { dataToUse, shouldRepopulateServer } = reconcileData(serverJson, localJson);
+
+        setData(dataToUse);
+        saveLocalData(dataToUse);
+        setLocalDbStatus('synced');
+        setLocalSavedDate(new Date().toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }));
+
+        // Si el servidor de Render se reinició con la imagen Docker por defecto,
+        // restauramos automáticamente la configuración local del usuario en la nube y el TV
+        if (shouldRepopulateServer) {
+          const authPin = pin || localStorage.getItem('kb_admin_pin') || '4355';
+          console.log('⚡ [Auto-Repoblar] Servidor reiniciado detectado. Restaurando configuración local...');
+          await fetch('/api/data', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'x-admin-pin': authPin
+            },
+            body: JSON.stringify(dataToUse)
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Error fetching data from server (usando base local):', err);
+      const localJson = getLocalData();
+      if (localJson) {
+        setData(localJson);
+      }
+      setLocalDbStatus('offline');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -174,17 +225,30 @@ export function AdminPanel() {
   }, []);
 
   const handleSave = async (customData = null) => {
-    // Prevent React SyntheticEvent from being treated as payload data
-    const isEvent = customData && typeof customData === 'object' && ('nativeEvent' in customData || 'target' in customData || '_reactName' in customData);
-    const toSave = (!isEvent && customData) ? customData : data;
+    // Sanitizar toSave: asegurarse de que nunca sea un evento de React o DOM
+    let toSave = data;
+    if (customData && typeof customData === 'object') {
+      const isEvent = 'nativeEvent' in customData || 'target' in customData || '_reactName' in customData || typeof customData.preventDefault === 'function';
+      if (!isEvent && (customData.activeScreens || customData.quinielaVespertina || customData.promociones || customData.rotationSeconds)) {
+        toSave = customData;
+      }
+    }
     if (!toSave) return false;
+
+    // 1. Guardar de inmediato en la base de datos local de este dispositivo
+    saveLocalData(toSave);
+    const nowStr = new Date().toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
+    setLocalSavedDate(nowStr);
+    setLocalDbStatus('synced');
+
     setSaving(true);
     try {
+      const authPin = pin || localStorage.getItem('kb_admin_pin') || '4355';
       const res = await fetch('/api/data', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-admin-pin': pin
+          'x-admin-pin': authPin
         },
         body: JSON.stringify(toSave)
       });
@@ -199,7 +263,8 @@ export function AdminPanel() {
         return true;
       }
     } catch (err) {
-      alert('Error guardando datos: ' + err.message);
+      alert('Aviso: Los cambios se guardaron en este dispositivo, pero falló la conexión con el servidor (' + err.message + '). Se reintentará al reconectar.');
+      setLocalDbStatus('offline');
       return false;
     } finally {
       setSaving(false);
@@ -584,7 +649,22 @@ export function AdminPanel() {
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
             PANEL DE CONTROL
           </h1>
-          <p className="text-xs text-gray-400">Kiosko Belvedere</p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <p className="text-xs text-gray-400">Kiosko Belvedere</p>
+            <span 
+              className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 border transition ${
+                localDbStatus === 'synced'
+                  ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/40'
+                  : localDbStatus === 'offline'
+                  ? 'bg-amber-950/80 text-amber-400 border-amber-500/40'
+                  : 'bg-blue-950/80 text-blue-400 border-blue-500/40'
+              }`}
+              title="Base de datos persistente en la memoria de este dispositivo"
+            >
+              <Database className="w-2.5 h-2.5" />
+              <span>Base Local</span>
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -1481,7 +1561,7 @@ export function AdminPanel() {
                   <span className="text-base sm:text-lg font-black text-white block drop-shadow">
                     POZO DE ORO: {data.cincoDeOro?.pozoOro || '$ 16.500.000'} | REVANCHA: {data.cincoDeOro?.pozoRevancha || '$ 5.500.000'}
                   </span>
-                  <span className="text-xs font-black text-yellow-300 block mt-1.5 bg-black/50 py-1 px-3 rounded-lg border border-yellow-400/40 shadow">
+                  <span className="text-xs font-black text-yellow-300 block mt-1.5 bg-blue-950/90 py-1 px-3 rounded-lg border border-yellow-400 shadow">
                     PRÓXIMO: {data.cincoDeOro?.proximoSorteo || 'Próximo Sorteo'}
                   </span>
                 </div>
@@ -1797,6 +1877,81 @@ export function AdminPanel() {
                   </div>
                 );
               })}
+            </div>
+
+            {/* SECCIÓN BASE DE DATOS LOCAL Y RESPALDOS */}
+            <div className="flex flex-col gap-3 bg-gradient-to-br from-gray-950 via-slate-900 to-indigo-950/40 p-4 rounded-xl border border-indigo-500/30 mt-2 shadow-lg">
+              <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <Database className="w-4 h-4 text-emerald-400" />
+                  <span className="text-xs font-black text-white uppercase tracking-wider">
+                    Base de Datos Local (Este Dispositivo)
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  Persistente
+                </span>
+              </div>
+
+              <p className="text-xs text-gray-300 leading-relaxed">
+                Toda tu configuración (ofertas, precios, tiempos de rotación y temas) se guarda en la memoria de este dispositivo.
+                Aunque el servidor de Render se apague o reinicie, tus datos se restauran solos automáticamente.
+              </p>
+
+              {localSavedDate && (
+                <div className="text-[11px] text-gray-400 bg-black/40 px-3 py-1.5 rounded-lg flex items-center justify-between">
+                  <span>Último guardado local:</span>
+                  <strong className="text-yellow-300 font-mono">{localSavedDate}</strong>
+                </div>
+              )}
+
+              {/* Botones de Respaldo y Restauración */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => exportBackupJson(data)}
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-gray-800 hover:bg-gray-700 active:bg-indigo-600 text-xs font-bold text-gray-200 rounded-xl border border-gray-700 shadow-sm transition"
+                  title="Descargar archivo JSON con toda tu configuración"
+                >
+                  <Download className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Descargar Copia</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-gray-800 hover:bg-gray-700 active:bg-indigo-600 text-xs font-bold text-gray-200 rounded-xl border border-gray-700 shadow-sm transition"
+                  title="Restaurar configuración desde un archivo JSON"
+                >
+                  <Upload className="w-3.5 h-3.5 text-yellow-400" />
+                  <span>Restaurar Copia</span>
+                </button>
+              </div>
+
+              {/* Input oculto para subir archivo JSON */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    const imported = await importBackupJson(file);
+                    if (imported && confirm('¿Deseas restaurar esta copia de seguridad? Se reemplazarán los datos actuales en este dispositivo y se emitirán al TV.')) {
+                      setData(imported);
+                      await handleSave(imported);
+                      alert('¡Copia de seguridad restaurada y enviada al TV con éxito!');
+                    }
+                  } catch (err) {
+                    alert(err.message);
+                  } finally {
+                    e.target.value = '';
+                  }
+                }}
+              />
             </div>
           </div>
         )}

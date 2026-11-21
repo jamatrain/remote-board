@@ -57,32 +57,32 @@ export function CincoDeOroSlide({
       <div className="w-full max-w-5xl mx-auto flex flex-row items-center justify-around my-auto z-10 px-4">
         
         {/* Left Column: Pozo de Oro */}
-        <div className="w-[48%] flex flex-col items-center text-center">
-          <span className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-widest text-white uppercase mb-2">
+        <div className="w-[48%] flex flex-col items-center text-center bg-black/30 border border-yellow-400/40 rounded-3xl py-6 px-4 shadow-2xl backdrop-blur-sm">
+          <span className="text-2xl sm:text-3xl md:text-4xl font-black tracking-widest text-yellow-300 uppercase mb-2 drop-shadow">
             POZO DE ORO
           </span>
-          <span className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight drop-shadow-lg">
+          <span className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
             {pozoOro || '$ 0'}
           </span>
         </div>
 
         {/* Right Column: Pozo Revancha */}
-        <div className="w-[48%] flex flex-col items-center text-center">
-          <span className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-widest text-white uppercase mb-2">
+        <div className="w-[48%] flex flex-col items-center text-center bg-black/30 border border-amber-400/40 rounded-3xl py-6 px-4 shadow-2xl backdrop-blur-sm">
+          <span className="text-2xl sm:text-3xl md:text-4xl font-black tracking-widest text-amber-300 uppercase mb-2 drop-shadow">
             POZO REVANCHA
           </span>
-          <span className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight drop-shadow-lg">
+          <span className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
             {pozoRevancha || '$ 0'}
           </span>
         </div>
 
       </div>
 
-      {/* BOTTOM: Próximo Sorteo & Footer */}
+      {/* BOTTOM: Próximo Sorteo & Footer (Banner Luminoso de Alto Contraste) */}
       <div className="w-full flex flex-col items-center gap-3 z-10">
-        <div className="flex flex-col items-center text-center bg-black/40 border-2 border-yellow-400/40 px-8 py-3 rounded-2xl shadow-2xl backdrop-blur-md">
-          <span className="text-sm sm:text-base font-black tracking-widest text-yellow-300 uppercase drop-shadow flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse shadow-[0_0_6px_#facc15]" />
+        <div className="flex flex-col items-center text-center bg-gradient-to-r from-blue-950 via-indigo-900 to-blue-950 border-2 border-yellow-400 px-10 py-3.5 rounded-2xl shadow-2xl">
+          <span className="text-sm sm:text-base font-black tracking-widest text-yellow-300 uppercase drop-shadow flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse shadow-[0_0_8px_#facc15]" />
             PRÓXIMO SORTEO
           </span>
           <span className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-wide mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
@@ -91,7 +91,7 @@ export function CincoDeOroSlide({
         </div>
 
         <div className="w-full border-t border-white/20 pt-2">
-          <OfficialFooter textColor="text-white/80" />
+          <OfficialFooter textColor="text-white" />
         </div>
       </div>
 

@@ -6,11 +6,11 @@
 [![Vite](https://img.shields.io/badge/Vite-5.x-646CFF.svg)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.x-38B2AC.svg)](https://tailwindcss.com/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
-[![Render](https://img.shields.io/badge/Deploy-Render-black.svg)](https://kiosko-belvedere.onrender.com)
+[![Deploy](https://img.shields.io/badge/Deploy-Render-black.svg)](https://kiosko-belvedere.onrender.com)
 
 **Remote Board** es una plataforma completa de cartelería digital para puntos de venta y agencias de lotería uruguayas, diseñada a medida para el comercio **Kiosko Belvedere**. 
 
-El sistema proyecta en un televisor **Spica LED de 32"** conectado por HDMI a una **Android TV Box (MXQ Pro 4K 5G)** los resultados oficiales de la **Quiniela**, **Tómbola** y **5 de Oro** con sincronización en vivo mediante la API de **La Banca**, alternando con pantallas dinámicas de ofertas y promociones del kiosko. Se administra y controla en tiempo real desde cualquier dispositivo móvil (iPhone / Android) vía **Server-Sent Events (SSE)**.
+El sistema proyecta en un televisor **Spica LED de 32"** conectado por HDMI a una **Android TV Box (MXQ Pro 4K 5G)** los resultados oficiales de la **Quiniela**, **Tómbola** y **5 de Oro** con sincronización en vivo mediante la API de **La Banca**, alternando con pantallas dinámicas de ofertas y promociones del kiosko. Se administra y controla en tiempo real desde el dispositivo móvil (iPhone / Android) vía **Server-Sent Events (SSE)** con persistencia local en el dispositivo del comercio.
 
 ---
 
@@ -18,42 +18,84 @@ El sistema proyecta en un televisor **Spica LED de 32"** conectado por HDMI a un
 
 ```mermaid
 flowchart TD
-    subgraph Clientes["Dispositivos en Tienda y Móvil"]
-        iPhone["📱 Celular Admin (iPhone)<br/>URL: / o /?pin=4355<br/>IP Uruguaya (Antel)"]
-        TVBox["📺 Android TV Box (MXQ Pro 4K 5G)<br/>TV Spica LED 32' (HDMI)<br/>Navegador Kiosk: /tv"]
+    subgraph LocalAdmin["📱 Dispositivo del Administrador (iPhone)"]
+        UIAdmin["Panel de Control Web (/ o /?pin=4355)"]
+        LocalDB[("💾 Base de Datos Local (localStorage)<br/>• Ofertas y Promociones<br/>• Ajustes TV y Tiempos<br/>• Temas y Números")]
+        Reconciler["Motor de Reconciliación Inteligente<br/>(localStore.js)"]
     end
 
-    subgraph Nube["Servidor en la Nube (Render / Docker)"]
+    subgraph Nube["☁️ Servidor en la Nube (Render / Docker)"]
         Router["Express App (Node.js 20)"]
         SSEBroker["Broker de Eventos SSE (/api/events)"]
-        DataStore["Persistencia JSON (board-data.json)"]
-        SyncService["Servicio de Fallback (/api/sync)"]
+        ServerData["Almacenamiento en Servidor (board-data.json)"]
+        SyncFallback["Servicio Fallback (/api/sync)"]
     end
 
-    subgraph OrigenDatos["API Oficial La Banca"]
-        LaBancaAPI["info-api.labanca.com.uy<br/>Cloudflare WAF"]
+    subgraph Pantalla["📺 Cartelería en Tienda"]
+        TVBox["Android TV Box (MXQ Pro 4K 5G)<br/>Modo Kiosk Fullscreen Autónomo"]
+        TV["Televisor Spica LED 32' (HDMI)<br/>URL: /tv"]
     end
 
-    %% Flujos de datos
-    iPhone -->|"1. Consulta directa Sorteos (CORS)"| LaBancaAPI
-    iPhone -->|"2. POST /api/data (PIN 4355)"| Router
-    iPhone -->|"3. Control Remoto (/api/control)"| Router
+    subgraph Proveedor["🎰 API Oficial La Banca"]
+        LaBancaAPI["info-api.labanca.com.uy<br/>Cloudflare WAF (IP Uruguaya)"]
+    end
 
-    Router --> DataStore
+    %% Relaciones
+    UIAdmin <-->|"Lectura / Escritura Inmediata (0ms)"| LocalDB
+    UIAdmin -->|"1. Sincronización Directa Sorteos (CORS)"| LaBancaAPI
+    LocalDB -->|"2. Auto-Repoblación si Render reinició"| Reconciler
+    Reconciler -->|"POST /api/data (PIN)"| Router
+    UIAdmin -->|"3. Comandos de Control Remoto"| Router
+
+    Router --> ServerData
     Router --> SSEBroker
-    Router -.->|"Sync Secundario"| SyncService
-    SyncService -.->|"Fallback"| LaBancaAPI
+    Router -.->|"Sync Secundario"| SyncFallback
+    SyncFallback -.->|"Fallback"| LaBancaAPI
 
-    SSEBroker -->|"4. Actualización Instantánea (SSE)"| TVBox
-    TVBox -->|"Carga Inicial (/api/data)"| Router
-    TVBox -->|"Caché Local Offline"| TVBox
+    SSEBroker ==>|"4. Emisión en Tiempo Real (SSE)"| TVBox
+    TVBox --> TV
+    TVBox -->|"Caché Local Offline si cae Wi-Fi"| TVBox
 ```
 
 ---
 
-## ⚡ 2. Flujo de Sincronización Inteligente de Sorteos
+## 💾 2. Base de Datos Local & Auto-Repoblación en Render
 
-Para sortear las restricciones geográficas y de datacenters extranjeros de Cloudflare en la nube de Render (error `HTTP 403`), el sistema implementa una **estrategia de sincronización híbrida**:
+En los planes gratuitos de Render, el contenedor entra en modo de reposo (*spin-down*) y el almacenamiento en disco es efímero (se restablece al estado original de la imagen Docker en cada reinicio).
+
+Para garantizar que **nunca se pierdan las promociones creadas, las ofertas pausadas, los segundos de rotación ni los ajustes del TV**, el sistema utiliza una arquitectura de **Persistencia Primaria en el Dispositivo**:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Juan as 📱 iPhone Administrador
+    participant LocalDB as 💾 Base Local (localStorage)
+    participant Cloud as ☁️ Servidor Render (Reinicio diario)
+    participant TV as 📺 TV Kiosko Belvedere
+
+    Juan->>LocalDB: Abre Panel de Control
+    LocalDB-->>Juan: Carga instantánea de promociones y estado (0 ms)
+    Juan->>Cloud: GET /api/data (Consulta estado del servidor)
+    alt Servidor se reinició (datos por defecto de la imagen Docker)
+        Juan->>Juan: Reconciliador detecta updatedAt desactualizado
+        Juan->>Cloud: POST /api/data (Auto-repuebla el servidor con la base local)
+        Cloud-->>TV: Emite evento SSE con la configuración restaurada
+        Juan->>Juan: Badge en cabecera: "Base Local: Sincronizada"
+    else Servidor tiene datos actualizados de La Banca
+        Cloud-->>Juan: Incorpora nuevos números a la base local
+    end
+```
+
+### Características de la Base de Datos Local:
+1. **Persistencia Total:** Todas las modificaciones (nuevas ofertas, pausas de productos, cambios de tema del 5 de Oro, ajustes de zoom) se guardan primero en la memoria local del teléfono (`localStorage`).
+2. **Auto-Repoblación Silenciosa:** Si el contenedor de Render se reinicia al día siguiente, el panel de control detecta automáticamente la discrepancia y restaura los datos del comercio en la nube y en el TV sin intervención del usuario.
+3. **Copias de Seguridad (Exportar / Importar JSON):** En la pestaña **Ajustes TV**, el comerciante cuenta con botones para descargar un archivo `.json` de respaldo y restaurarlo en cualquier momento o dispositivo.
+
+---
+
+## ⚡ 3. Sincronización Oficial de Sorteos (La Banca)
+
+El sistema consulta directamente los sorteos oficiales de **La Banca** evitando los bloqueos de Cloudflare gracias a la IP uruguaya del celular:
 
 ```mermaid
 sequenceDiagram
@@ -71,7 +113,7 @@ sequenceDiagram
         Cloud->>Cloud: Guarda en board-data.json
         Cloud-->>TV: Emite evento SSE (tipo: UPDATE)
         TV->>TV: Refresca pantalla al instante con nuevos números
-        Admin->>Admin: Banner Verde: "¡Nuevos resultados detectados y emitidos al TV!"
+        Admin->>Admin: Notificación: "¡Nuevos resultados detectados y emitidos al TV!"
     else Error en Conexión Directa
         Admin->>Cloud: POST /api/sync (Fallback a servidor en la nube)
         Cloud->>API: Intenta consulta de respaldo
@@ -81,9 +123,31 @@ sequenceDiagram
 
 ---
 
-## 🔁 3. Ciclo de Vida y Control Remoto del TV
+## 📺 4. Inicio Automático y Pantalla Completa en Android Box (MXQ Pro 4K 5G)
 
-El televisor opera de forma autónoma con rotación programada de diapositivas, pero puede ser comandado en vivo por el administrador desde el panel de control móvil:
+Para evitar usar el control remoto físico cada día al encender el kiosko, se configura la Android TV Box para que **arranque automáticamente en pantalla completa (Modo Kiosk)** sin barras de navegación ni menús.
+
+### Solución Recomendada: Fully Kiosk Browser (Estándar de Cartelería Digital)
+
+**Fully Kiosk Browser** es la aplicación líder para señalización digital en Android:
+1. **Descarga en la TV Box:**
+   - Abrir el navegador en la TV Box e ingresar a: `https://www.fully-kiosk.com/#download-box` (o buscar *Fully Kiosk Browser* en Google Play / Aptoide TV).
+2. **Configuración inicial (se hace una sola vez):**
+   - **Start URL:** `https://kiosko-belvedere.onrender.com/tv`
+   - **Start on Boot:** Activar `ON` (inicia automáticamente al conectar la corriente).
+   - **Kiosk Mode (Full Screen):** Activar `ON` (elimina la barra de estado y la barra de navegación de Android).
+   - **Keep Screen On:** Activar `ON` (evita que la pantalla se apague o entre en suspensión).
+   - **Autoreload on Network Reconnect:** Activar `ON` (recarga la página automáticamente si el Wi-Fi se reconecta).
+3. **Resultado:** Al encender la zapatilla o el enchufe del kiosko por la mañana, la Android TV Box arranca y en 15 segundos queda proyectando la cartelería en pantalla completa sin tocar ningún control remoto.
+
+### Alternativa Gratuita (Play Store): AutoStart + TV Bro
+1. Instalar la app gratuita **AutoStart - No root** desde Google Play Store.
+2. Añadir como aplicación de inicio el navegador **TV Bro**.
+3. En **TV Bro**: configurar la página de inicio en `https://kiosko-belvedere.onrender.com/tv` y activar en sus ajustes *"Ocultar barras / Pantalla completa"*.
+
+---
+
+## 🎨 5. Pantallas y Sorteos
 
 ```mermaid
 stateDiagram-v2
@@ -94,7 +158,7 @@ stateDiagram-v2
         QuinielaVesp --> TombolaVesp: Espera rotacionSegundos
         TombolaVesp --> QuinielaNoct: Siguiente slide activa
         QuinielaNoct --> TombolaNoct: Siguiente slide activa
-        TombolaNoct --> CincoDeOroSorteo: Siguiente slide activa
+        TombolaNoct --> CincoDeOroSorteo: Siguiente slide activa (Miér/Dom)
         CincoDeOroSorteo --> CincoDeOroPozos: Siguiente slide activa
         CincoDeOroPozos --> OfertasKiosko: Siguiente slide activa
         OfertasKiosko --> QuinielaVesp: Reinicia ciclo
@@ -102,139 +166,72 @@ stateDiagram-v2
 
     RotacionAutomatica --> Pausado: Comando "Pausa" desde Celular
     Pausado --> RotacionAutomatica: Comando "Reanudar" desde Celular
-
     RotacionAutomatica --> DiapositivaFija: Comando "Ir a Slide" (ej: 5 de Oro)
     DiapositivaFija --> RotacionAutomatica: Reanudar ciclo automático
-
     RotacionAutomatica --> RecargaForzada: Comando "Guardar y Recargar TV"
-    RecargaForzada --> CargandoInicial: Recarga de ventana remota
 ```
 
----
-
-## 🎨 4. Pantallas y Componentes del Sistema
-
-### A. Resultados Oficiales de Loterías
-1. **Quiniela (Vespertina & Nocturna)**:
-   - Fondo verde césped oficial, tipografía de alta visibilidad para visualización a 5 metros de distancia.
-   - 20 casilleros tabulares (premios 1º al 20º) con la fecha y hora oficial del sorteo.
-2. **Tómbola (Vespertina & Nocturna)**:
-   - Fondo rojo carmesí oficial de La Tómbola.
-   - 20 bolillas celestes con acabado esférico sombreado en 3D, ordenadas numéricamente.
-3. **5 de Oro (Resultados del Sorteo)**:
+### Detalle de Pantallas:
+1. **Quiniela (Vespertina & Nocturna):**
+   - Fondo verde césped oficial. 20 casilleros tabulares (1º al 20º premio) con alta legibilidad a más de 5 metros.
+2. **Tómbola (Vespertina & Nocturna):**
+   - Fondo rojo carmesí oficial. 20 bolillas celestes con sombreado esférico 3D ordenadas numéricamente de menor a mayor.
+3. **5 de Oro (Resultados Oficiales del Sorteo):**
    - Fondo en **tonalidades azules profundas** y barra lateral izquierda con logo oficial, fecha y día del sorteo (Miércoles y Domingos).
-   - **Bolillas Doradas 3D con letras negras**: 5 bolillas de Pozo de Oro + Bolilla Extra en ámbar/naranja + 5 bolillas de Pozo Revancha.
+   - **Bolillas Doradas 3D con letras negras**: 5 bolillas de Pozo de Oro + Bolilla Extra en ámbar con insignia flotante + 5 bolillas de Pozo Revancha.
    - Estado de vacante o ganadores para Pozo de Oro y Revancha.
-   - Banner inferior con los pozos estimados para el próximo sorteo.
-4. **5 de Oro (Pozos Acumulados)**:
-   - Montos destacados en tipografía gigante para el **Pozo de Oro** y **Pozo Revancha**.
-   - Leyenda dinámica de la fecha del próximo sorteo (ej. *"Lunes 23"* o *"Domingo 22"*).
-   - **Selector de Paletas de Color en Vivo**:
-     - 🔵 Azul Oficial (por defecto)
-     - 🟣 Violeta Premium
-     - ⚫ Dorado y Negro
-     - 🔴 Rojo Ruleta
-     - 🟢 Verde Esmeralda
-
-### B. Módulo de Ofertas y Promociones (Kiosko Belvedere)
-Permite promocionar productos del kiosko (bebidas, cigarrillos, golosinas, combos) con 3 modelos visuales configurables:
-* **Modelo 1 (Estándar)**: Tarjeta centrada con distintivo, tipografía clara y precio horizontal.
-* **Modelo 2 (Inclinado Dinámico `/ \`)**: Título con ángulo inclinado a la izquierda y cartel del precio inclinado en contra-ángulo a la derecha para un efecto visual llamativo de oferta relámpago.
-* **Modelo 3 (2 Columnas)**: Presentación dividida con tipografía expandida para combos y descripciones largas.
-* **Acciones rápidas**: Pausar/activar ofertas con un solo tap (auto-guardadas en tiempo real sin perder estado).
-
-### C. Mando a Distancia Virtual (iPhone Admin)
-* **Control de rotación**: Botones rápidos de duración por slide (`10s`, `15s`, `20s`, `30s`, `45s`, `60s`).
-* **Botones de salto directo**: Botones dedicados para proyectar en el TV de inmediato: *Quiniela Vesp, Tómbola Vesp, Quiniela Noct, Tómbola Noct, 5 de Oro u Ofertas*.
-* **Play / Pause**: Detener la rotación para fijar un sorteo en pantalla.
-* **Guardar y Recargar TV**: Guarda los cambios en disco y fuerza una recarga remota del navegador del televisor.
+   - Banner inferior de alto contraste con los pozos estimados para el próximo sorteo.
+4. **5 de Oro (Pozos Acumulados):**
+   - Montos destacados en tipografía gigante para el Pozo de Oro y Pozo Revancha.
+   - Selector de temas en vivo (Azul Oficial, Violeta Premium, Dorado/Negro, Rojo Ruleta, Verde Esmeralda).
+5. **Ofertas y Promociones (Kiosko Belvedere):**
+   - Módulo para destacar productos del comercio (refrescos, golosinas, combos, cigarrillos).
+   - Modelos visuales: Estándar, Inclinado Relámpago (`/ \`) y 2 Columnas.
+   - Botón de pausa/reactivación instantánea de ofertas.
 
 ---
 
-## 🔐 5. Seguridad y Autenticación
+## 🔐 6. Seguridad y Control Remoto
 
-* **PIN Maestro Permanente**: `4355`.
-* **Hash SHA-256**: Los datos guardados protegen el acceso administrativo mediante hashing en [board-data.json](file:///Users/juan/Documents/sistemas/remote-board/data/board-data.json).
-* **Acceso Rápido por URL**: `https://kiosko-belvedere.onrender.com/?pin=4355` inicia sesión automáticamente y almacena el PIN en `localStorage` del dispositivo autorizado.
-* **Protección de Endpoints**: Todas las rutas de mutación (`/api/data`, `/api/control`, `/api/sync`, `/api/change-pin`) requieren el header HTTP `x-admin-pin`.
-
----
-
-## 🖥️ 6. Configuración de Hardware en Kiosko Belvedere
-
-| Componente | Especificación | Función |
-| :--- | :--- | :--- |
-| **Pantalla** | Spica LED 32" (1366x768 / 1080p HDMI) | Display para clientes en el mostrador del kiosko |
-| **Reproductor** | Android TV Box MXQ Pro 4K 5G | Dispositivo autónomo de señalización digital |
-| **Navegador TV** | **TV Bro** / **Fully Kiosk Browser** | Navegador optimizado para TV en pantalla completa sin barra de navegación |
-| **URL del TV** | `https://kiosko-belvedere.onrender.com/tv` | Modo visualización exclusivo (sin controles administrativos) |
-| **Conectividad** | Wi-Fi / Zona Wi-Fi compartida desde iPhone | Descarga de sorteos y conexión SSE continua |
-| **Modo Offline** | Resiliencia autónoma local | Si el hotspot se desconecta, el TV sigue rotando los últimos sorteos guardados sin pantalla negra ni error |
+* **PIN Maestro Permanente:** `4355`.
+* **Protección de API:** Las peticiones `POST` a `/api/data`, `/api/control`, `/api/sync` y `/api/change-pin` requieren la cabecera `x-admin-pin`.
+* **Mando Virtual en Vivo:**
+  - Control de tiempo por slide (`10s`, `15s`, `20s`, `30s`, `45s`, `60s`).
+  - Botones de salto directo para forzar un sorteo en pantalla.
+  - Pausar / Reanudar rotación.
+  - Botón *"Guardar y Recargar TV"* para refrescar el navegador del televisor a distancia.
 
 ---
 
-## 🚀 7. Guía de Despliegue y Desarrollo
-
-### Requisitos
-- Node.js 18 o 20 LTS
-- Docker Desktop (opcional para despliegue en contenedores)
-
-### Ejecución Local
-```bash
-# 1. Instalar dependencias
-npm install
-
-# 2. Iniciar en modo desarrollo
-npm run dev
-
-# 3. Compilar para producción
-npm run build
-
-# 4. Iniciar servidor local de producción
-npm start
-```
-* **Panel de Control:** [http://localhost:3000](http://localhost:3000) (o [http://localhost:3000/?pin=4355](http://localhost:3000/?pin=4355))
-* **Pantalla TV:** [http://localhost:3000/tv](http://localhost:3000/tv)
-
-### Despliegue en Render vía Docker
-Dado que los servidores de Render operan en arquitectura `linux/amd64`, compilar la imagen multiplataforma desde equipos Apple Silicon (Mac M1/M2/M3) con:
-
-```bash
-# 1. Compilación multiplataforma
-docker build --platform linux/amd64 -t TU_USUARIO/remote-board:latest .
-
-# 2. Subida al registro de contenedores
-docker push TU_USUARIO/remote-board:latest
-
-# 3. Render actualizará automáticamente el servicio web.
-```
-
----
-
-## 📄 8. Estructura del Proyecto
+## 📁 7. Estructura del Proyecto
 
 ```
 remote-board/
 ├── data/
-│   └── board-data.json        # Base de datos JSON con estado y PIN
+│   └── board-data.json               # Almacenamiento JSON en servidor con estado y PIN
 ├── src/
 │   ├── components/
-│   │   ├── AdminPanel.jsx     # Panel de gestión y control remoto virtual
-│   │   ├── TvDisplay.jsx      # Pantalla para el TV con rotación y SSE
-│   │   ├── CincoDeOroSlide.jsx# Diapositiva de pozos y temas del 5 de Oro
-│   │   ├── QuinielaSlide.jsx  # Diapositiva oficial de Quiniela
-│   │   ├── TombolaSlide.jsx   # Diapositiva oficial de Tómbola con bolillas 3D
-│   │   ├── KioskoSlide.jsx    # Diapositiva de ofertas con modelos clásico e inclinado
-│   │   └── common/            # Componentes reutilizables y logos oficiales
+│   │   ├── AdminPanel.jsx            # Panel de administración, mando virtual y gestión
+│   │   ├── TVBoard.jsx               # Pantalla de visualización para el TV con SSE
+│   │   ├── slides/
+│   │   │   ├── QuinielaSlide.jsx     # Diapositiva oficial de Quiniela
+│   │   │   ├── TombolaSlide.jsx      # Diapositiva oficial de Tómbola (bolillas 3D)
+│   │   │   ├── CincoDeOroSorteoSlide.jsx # Sorteo 5 de Oro (bolillas doradas, azul oficial)
+│   │   │   ├── CincoDeOroSlide.jsx   # Pozos acumulados del 5 de Oro con temas
+│   │   │   └── KioskoSlide.jsx       # Diapositiva de ofertas y combos
+│   │   └── common/
+│   │       └── Logos.jsx             # Logos vectoriales (Quiniela, Tómbola, 5 de Oro)
 │   ├── services/
-│   │   └── labanca.js         # Servicio backend de consulta a La Banca
+│   │   └── labanca.js                # Servicio de consulta backend a La Banca
 │   ├── utils/
-│   │   └── labancaClient.js   # Sincronizador frontend cliente (CORS / IP uruguaya)
-│   ├── App.jsx                # Enrutador de vistas (/ y /tv)
-│   └── main.jsx               # Entrypoint de React
-├── server.js                  # Servidor Express, API REST y Broker SSE
-├── Dockerfile                 # Contenedor optimizado Node.js Alpine
-└── package.json               # Dependencias y scripts
+│   │   ├── localStore.js             # Base de datos local, persistencia y respaldos JSON
+│   │   └── labancaClient.js          # Cliente de sincronización directa (CORS / IP uruguaya)
+│   ├── App.jsx                       # Enrutador principal (/ y /tv)
+│   ├── index.css                     # Estilos globales y efectos 3D de bolillas
+│   └── main.jsx                      # Punto de entrada de React
+├── server.js                         # Servidor Express, API REST y Broker SSE
+├── Dockerfile                        # Imagen Docker multiarquitectura (linux/amd64)
+└── package.json                      # Dependencias y scripts de construcción
 ```
 
 ---

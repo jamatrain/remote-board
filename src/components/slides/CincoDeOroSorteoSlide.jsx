@@ -78,14 +78,14 @@ export function CincoDeOroSorteoSlide({
 
           {/* Sorteo Del & Fecha */}
           <div className="w-full text-center flex flex-col items-center mt-3">
-            <span className="text-xs sm:text-sm font-bold text-white/90 tracking-widest uppercase">
+            <span className="text-xs sm:text-sm font-black text-yellow-300 tracking-widest uppercase drop-shadow">
               SORTEO DEL
             </span>
-            <span className="text-3xl sm:text-4xl font-black text-white tracking-wider drop-shadow-sm mt-0.5">
+            <span className="text-3xl sm:text-4xl font-black text-white tracking-wider drop-shadow mt-0.5">
               {fecha || '--/--/--'}
             </span>
             {diaSemana && (
-              <span className="text-xs sm:text-sm font-black text-yellow-300 tracking-wider uppercase mt-1 bg-yellow-400/20 px-3 py-0.5 rounded-full border border-yellow-400/30">
+              <span className="text-xs sm:text-sm font-black text-yellow-300 tracking-wider uppercase mt-1.5 bg-yellow-400/20 px-3.5 py-1 rounded-full border border-yellow-400/40 shadow">
                 {diaSemana}
               </span>
             )}
@@ -94,7 +94,7 @@ export function CincoDeOroSorteoSlide({
 
         {/* Legal Footer */}
         <div className="w-full border-t border-white/20 pt-2">
-          <OfficialFooter textColor="text-white/80" />
+          <OfficialFooter textColor="text-white" />
         </div>
       </div>
 
@@ -142,7 +142,7 @@ export function CincoDeOroSorteoSlide({
 
             {/* Bolilla Extra (Con badge flotante para mantener la bola en la misma línea exacta) */}
             <div className="relative flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 flex-shrink-0">
-              <span className="absolute -top-4 sm:-top-5 left-1/2 -translate-x-1/2 px-2 sm:px-2.5 py-0.5 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 text-black text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-full shadow-lg border border-yellow-200 whitespace-nowrap z-20">
+              <span className="absolute -top-4 sm:-top-5 left-1/2 -translate-x-1/2 px-2.5 sm:px-3 py-0.5 bg-yellow-400 text-black text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-full shadow-lg border border-white whitespace-nowrap z-20">
                 EXTRA
               </span>
               <div className="lottery-ball-gold-extra w-full h-full text-3xl sm:text-4xl md:text-5xl font-mono font-black text-black flex items-center justify-center shadow-2xl">
@@ -188,32 +188,32 @@ export function CincoDeOroSorteoSlide({
         </div>
 
         {/* 3. BANNER INFERIOR: PRÓXIMOS POZOS ESTIMADOS (Alta Legibilidad y Contraste Luminoso) */}
-        <div className="w-full bg-gradient-to-r from-blue-950/90 via-indigo-950/90 to-blue-900/90 border-2 border-yellow-400/40 rounded-2xl px-6 py-3.5 flex items-center justify-between text-white shadow-2xl backdrop-blur-md">
+        <div className="w-full bg-gradient-to-r from-blue-950 via-indigo-900 to-blue-950 border-2 border-yellow-400 rounded-2xl px-6 py-3.5 flex items-center justify-between text-white shadow-2xl">
           <div className="flex items-center gap-3">
             <span className="text-xs sm:text-sm font-black text-yellow-300 uppercase tracking-widest flex items-center gap-1.5 drop-shadow">
               <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse shadow-[0_0_8px_#facc15]" />
               PRÓXIMO SORTEO:
             </span>
-            <span className="text-base sm:text-lg font-black text-white tracking-wide bg-white/10 px-3.5 py-1 rounded-xl border border-white/20 shadow-inner">
+            <span className="text-base sm:text-lg font-black text-white tracking-wide bg-white/20 px-3.5 py-1 rounded-xl border border-white/30 shadow-inner">
               {proximoSorteo || 'Próximamente'}
             </span>
           </div>
 
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <span className="text-xs sm:text-sm font-bold text-yellow-200/90 uppercase tracking-wider">
+              <span className="text-xs sm:text-sm font-black text-yellow-300 uppercase tracking-wider">
                 Pozo de Oro:
               </span>
-              <span className="text-base sm:text-xl font-black text-yellow-300 tracking-tight drop-shadow">
+              <span className="text-base sm:text-2xl font-black text-white tracking-tight drop-shadow">
                 {pozoOro}
               </span>
             </div>
-            <div className="h-5 w-[1px] bg-yellow-400/30" />
+            <div className="h-5 w-[1px] bg-yellow-400/50" />
             <div className="flex items-center gap-2">
-              <span className="text-xs sm:text-sm font-bold text-amber-200/90 uppercase tracking-wider">
+              <span className="text-xs sm:text-sm font-black text-amber-300 uppercase tracking-wider">
                 Revancha:
               </span>
-              <span className="text-base sm:text-xl font-black text-amber-300 tracking-tight drop-shadow">
+              <span className="text-base sm:text-2xl font-black text-white tracking-tight drop-shadow">
                 {pozoRevancha}
               </span>
             </div>
