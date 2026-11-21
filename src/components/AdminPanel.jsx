@@ -32,7 +32,8 @@ import {
   Download,
   Upload,
   HardDrive,
-  CheckCircle2
+  CheckCircle2,
+  Smartphone
 } from 'lucide-react';
 import { syncWithLaBancaClient } from '../utils/labancaClient';
 import { 
@@ -113,6 +114,15 @@ export function AdminPanel() {
 
   // References for auto-jumping inputs
   const inputsRef = useRef({});
+
+  // IP local de la Android TV Box para lanzar Fully Kiosk vía Remote Admin
+  const [tvBoxIp, setTvBoxIp] = useState(() => {
+    try {
+      return localStorage.getItem('kb_tvbox_ip') || '';
+    } catch {
+      return '';
+    }
+  });
 
   const handleVerifyPin = async (e) => {
     if (e) e.preventDefault();
@@ -380,6 +390,37 @@ export function AdminPanel() {
     }
   };
 
+  const launchFullyKioskOnTv = (targetIp = null) => {
+    let ip = targetIp || tvBoxIp;
+    if (!ip) {
+      const entered = prompt('Ingresá la IP local de la Android TV Box (ej: 192.168.1.50):', '192.168.1.');
+      if (!entered || !entered.trim()) return;
+      const cleanIp = entered.trim().replace(/^https?:\/\//, '').replace(/:2323\/?$/, '').replace(/\/$/, '');
+      setTvBoxIp(cleanIp);
+      localStorage.setItem('kb_tvbox_ip', cleanIp);
+      ip = cleanIp;
+    }
+
+    const cleanIp = ip.trim().replace(/^https?:\/\//, '').replace(/:2323\/?$/, '').replace(/\/$/, '');
+    const targetUrl = encodeURIComponent('https://kiosko-belvedere.onrender.com/tv');
+    const authPass = '4355';
+
+    // 1. Cargar la URL de la cartelería en Fully Kiosk
+    const loadUrlCmd = `http://${cleanIp}:2323/?cmd=loadURL&url=${targetUrl}&password=${authPass}`;
+    const img1 = new Image();
+    img1.src = loadUrlCmd;
+
+    // 2. Traer Fully Kiosk al primer plano
+    setTimeout(() => {
+      const bringFgCmd = `http://${cleanIp}:2323/?cmd=bringToForeground&password=${authPass}`;
+      const img2 = new Image();
+      img2.src = bringFgCmd;
+    }, 300);
+
+    setTvControlStatus(`🚀 Kiosk lanzado en ${cleanIp}`);
+    setTimeout(() => setTvControlStatus(null), 3500);
+  };
+
   const handleNumberChange = (section, index, value, maxLen = 3) => {
     const clean = value.replace(/\D/g, '').slice(0, maxLen);
     const updatedNumbers = [...(data[section]?.numeros || Array(20).fill(''))];
@@ -643,17 +684,17 @@ export function AdminPanel() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col pb-28">
-      {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-gray-900/90 backdrop-blur-md border-b border-gray-800 px-4 py-3 flex items-center justify-between shadow-lg">
-        <div>
-          <h1 className="text-lg font-black text-white tracking-wider flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+      {/* Top Header - Re-encuadrado y alineado con precisión */}
+      <header className="sticky top-0 z-40 bg-gray-900/95 backdrop-blur-md border-b border-gray-800 px-3 sm:px-4 py-2.5 flex items-center justify-between shadow-lg">
+        <div className="flex flex-col justify-center min-w-0 pr-2">
+          <h1 className="text-base sm:text-lg font-black text-white tracking-wider flex items-center gap-1.5 truncate">
+            <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
             PANEL DE CONTROL
           </h1>
           <div className="flex items-center gap-2 mt-0.5">
-            <p className="text-xs text-gray-400">Kiosko Belvedere</p>
+            <span className="text-[11px] sm:text-xs text-gray-400 font-medium truncate">Kiosko Belvedere</span>
             <span 
-              className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 border transition ${
+              className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 border transition flex-shrink-0 ${
                 localDbStatus === 'synced'
                   ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/40'
                   : localDbStatus === 'offline'
@@ -668,34 +709,40 @@ export function AdminPanel() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Change PIN button */}
+        {/* Acciones del Header perfectamente alineadas y proporcionadas con la misma altura */}
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+          {/* Botón PIN */}
           <button
+            type="button"
             onClick={() => setChangePinModalOpen(true)}
-            className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-800 hover:bg-gray-700 active:bg-gray-750 text-yellow-300 rounded-lg text-xs font-bold transition shadow border border-yellow-400/30"
+            className="h-8 px-2 sm:px-2.5 bg-gray-800/90 hover:bg-gray-700 active:bg-gray-750 text-yellow-300 rounded-lg text-xs font-bold transition shadow-sm border border-yellow-500/30 flex items-center justify-center gap-1"
             title="Cambiar PIN de seguridad"
           >
-            <Key className="w-3.5 h-3.5" />
+            <Key className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0" />
             <span>PIN</span>
           </button>
 
+          {/* Botón Copiar Link TV */}
           <button
+            type="button"
             onClick={copyTvLink}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-yellow-400 rounded-lg text-xs font-bold transition shadow"
+            className="h-8 px-2.5 sm:px-3 bg-gray-800/90 hover:bg-gray-700 active:bg-gray-750 text-gray-200 rounded-lg text-xs font-bold transition shadow-sm border border-gray-700 flex items-center justify-center gap-1"
             title="Copiar URL para el TV"
           >
-            {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            {copiedLink ? 'Copiado!' : 'Link TV'}
+            {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" /> : <Copy className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0" />}
+            <span>{copiedLink ? '¡Copiado!' : 'Link TV'}</span>
           </button>
 
+          {/* Botón Ver TV */}
           <a
             href="/tv"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition shadow"
+            className="h-8 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-95 text-white rounded-lg text-xs font-black transition shadow-md border border-blue-400/40 flex items-center justify-center gap-1.5"
+            title="Abrir pantalla del televisor en nueva pestaña"
           >
-            <Tv className="w-3.5 h-3.5" />
-            Ver TV
+            <Tv className="w-3.5 h-3.5 text-blue-200 flex-shrink-0" />
+            <span>Ver TV</span>
           </a>
         </div>
       </header>
@@ -854,9 +901,9 @@ export function AdminPanel() {
             </div>
           </div>
 
-          {/* Botón para recargar TV remotamente con guardado previo */}
-          <div className="pt-2 border-t border-white/10 flex items-center justify-between">
-            <span className="text-[11px] text-gray-400">Actualizar navegador del TV:</span>
+          {/* Fila de Acciones Remotas del TV: Recargar y Lanzar Kiosk */}
+          <div className="pt-2.5 border-t border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+            {/* Botón Recargar Navegador TV */}
             <button
               type="button"
               onClick={async () => {
@@ -865,11 +912,22 @@ export function AdminPanel() {
                   sendTvControl('reload');
                 }
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 active:bg-cyan-600 text-cyan-300 rounded-lg text-xs font-bold transition border border-cyan-500/30 shadow-sm"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-gray-800 hover:bg-gray-700 active:bg-cyan-600 text-cyan-300 rounded-xl text-xs font-bold transition border border-cyan-500/30 shadow-sm"
               title="Guardar y refrescar el televisor remotamente"
             >
               <RotateCw className="w-3.5 h-3.5" />
-              Guardar y Recargar TV
+              <span>Guardar y Recargar TV</span>
+            </button>
+
+            {/* Botón Lanzar Fully Kiosk en Android TV Box */}
+            <button
+              type="button"
+              onClick={() => launchFullyKioskOnTv()}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 active:scale-95 text-white rounded-xl text-xs font-black transition border border-blue-400/40 shadow-sm"
+              title="Abrir o traer al frente la aplicación Fully Kiosk en la Android TV Box"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-yellow-300" />
+              <span>{tvBoxIp ? `Lanzar Kiosk (${tvBoxIp})` : '🚀 Lanzar Kiosk en TV'}</span>
             </button>
           </div>
         </section>
@@ -1953,6 +2011,54 @@ export function AdminPanel() {
                   }
                 }}
               />
+            </div>
+
+            {/* SECCIÓN ANDROID TV BOX / FULLY KIOSK REMOTE ADMIN */}
+            <div className="flex flex-col gap-3 bg-gradient-to-br from-gray-950 via-slate-900 to-blue-950/40 p-4 rounded-xl border border-blue-500/30 shadow-lg">
+              <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-blue-400" />
+                  <span className="text-xs font-black text-white uppercase tracking-wider">
+                    Lanzador Remoto Android TV Box (Fully Kiosk)
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                  Puerto 2323
+                </span>
+              </div>
+
+              <p className="text-xs text-gray-300 leading-relaxed">
+                Permite que este celular despierte o abra la cartelería directamente en la Android TV Box a través de tu Wi-Fi local sin tocar el control remoto.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                <div className="flex-1 flex items-center bg-gray-900 border border-gray-700 rounded-xl px-3 py-2">
+                  <span className="text-xs text-gray-400 mr-2 font-mono whitespace-nowrap">IP TV Box:</span>
+                  <input
+                    type="text"
+                    value={tvBoxIp}
+                    onChange={(e) => {
+                      const val = e.target.value.trim();
+                      setTvBoxIp(val);
+                      localStorage.setItem('kb_tvbox_ip', val);
+                    }}
+                    placeholder="Ej: 192.168.1.50"
+                    className="w-full bg-transparent text-white font-mono text-xs focus:outline-none placeholder-gray-600"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => launchFullyKioskOnTv()}
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black shadow transition active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  <Smartphone className="w-3.5 h-3.5 text-yellow-300" />
+                  <span>Probar Lanzar</span>
+                </button>
+              </div>
+
+              <span className="text-[10px] text-gray-400">
+                💡 Recordá en Fully Kiosk en la TV Box: <em>Settings ➡️ Remote Administration ➡️ Enable Remote Admin (Password: 4355)</em>.
+              </span>
             </div>
           </div>
         )}
