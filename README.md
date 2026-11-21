@@ -231,8 +231,14 @@ remote-board/
 │   └── main.jsx                      # Punto de entrada de React
 ├── server.js                         # Servidor Express, API REST y Broker SSE
 ├── Dockerfile                        # Imagen Docker multiarquitectura (linux/amd64)
+├── GEMINI.md                         # Especificación y contexto integral para SDD
 └── package.json                      # Dependencias y scripts de construcción
 ```
+
+---
+
+## 📐 8. Especificación de Diseño y SDD (Spec-Driven Development)
+El documento canónico para análisis, evolución y desarrollo dirigido por especificaciones (SDD) se encuentra en [GEMINI.md](file:///Users/juan/Documents/sistemas/remote-board/GEMINI.md). Contiene los contratos de datos de TypeScript, endpoints de la API, ciclo de vida de reconciliación local-first y directrices de diseño.
 
 ---
 *Desarrollado para **Kiosko Belvedere** | Sistema de Cartelería Digital Oficial.*
