@@ -127,46 +127,65 @@ export function clearLocalData() {
 }
 
 /**
+ * Convierte fechas 'DD/MM/AA' o 'AAAA-MM-DD' a timestamp numérico para compararlas sin errores de cambio de mes.
+ */
+function parseFechaToTimestamp(fechaStr) {
+  if (!fechaStr || typeof fechaStr !== 'string') return 0;
+  const trimmed = fechaStr.trim();
+  const ddmmyy = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
+  if (ddmmyy) {
+    const day = Number(ddmmyy[1]);
+    const month = Number(ddmmyy[2]) - 1;
+    const year = ddmmyy[3].length === 2 ? 2000 + Number(ddmmyy[3]) : Number(ddmmyy[3]);
+    return new Date(year, month, day).getTime() || 0;
+  }
+  const parsed = Date.parse(trimmed);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+/**
+ * Elige el resultado de sorteo más reciente entre servidor y local.
+ */
+function pickNewerLotteryGame(serverGame, localGame) {
+  const serverTs = parseFechaToTimestamp(serverGame?.fecha);
+  const localTs = parseFechaToTimestamp(localGame?.fecha);
+  return serverTs >= localTs && serverTs > 0 ? serverGame : (localGame || serverGame);
+}
+
+/**
  * Compara y sincroniza inteligentemente los datos del servidor (Render) con la base local (iPhone).
- * Si el servidor reinició (sus datos son más viejos o por defecto), devuelve que el servidor necesita repoblarse.
- * Si el servidor tiene sorteos más nuevos de La Banca, los incorpora a la base local.
+ * Separa el timestamp de configuración/anuncios (`configUpdatedAt`) del de sorteos (`updatedAt`)
+ * para que un Boot-Sync o Auto-Sync de La Banca nunca pise las promociones locales.
  */
 export function reconcileData(serverData, localData) {
   if (!serverData && !localData) return { dataToUse: null, shouldRepopulateServer: false };
   if (!localData) return { dataToUse: serverData, shouldRepopulateServer: false };
   if (!serverData) return { dataToUse: localData, shouldRepopulateServer: true };
 
-  const serverTime = serverData.updatedAt ? new Date(serverData.updatedAt).getTime() : 0;
+  const serverConfigTime = serverData.configUpdatedAt ? new Date(serverData.configUpdatedAt).getTime() : 0;
   const localTime = localData.updatedAt ? new Date(localData.updatedAt).getTime() : 0;
   const localSavedTime = localData._localSavedAt ? new Date(localData._localSavedAt).getTime() : localTime;
+  const localConfigTime = localData.configUpdatedAt
+    ? new Date(localData.configUpdatedAt).getTime()
+    : localSavedTime;
 
-  // Si la base local en este dispositivo fue modificada o guardada posteriormente a la del servidor,
-  // significa que el servidor de Render se reinició con el archivo por defecto de la imagen Docker.
-  const isServerStale = localSavedTime > serverTime || localTime > serverTime;
-
-  // Verificamos si localData tiene promociones o ajustes personalizados que faltan en el servidor
+  // Si la configuración local es más reciente que la del servidor (o el servidor arrancó con el JSON semilla sin configUpdatedAt),
+  // la base local del administrador prevalece para promociones, pantallas activas y rotación.
+  const isLocalConfigNewer = localConfigTime > serverConfigTime;
   const hasLocalPromos = Array.isArray(localData.promociones) && localData.promociones.length > 0;
   const serverHasNoPromos = !Array.isArray(serverData.promociones) || serverData.promociones.length === 0;
 
-  if (isServerStale || (hasLocalPromos && serverHasNoPromos)) {
-    // La base local es la fuente de la verdad más reciente
+  if (isLocalConfigNewer || (hasLocalPromos && serverHasNoPromos)) {
+    const resolvedConfigTimestamp = localData.configUpdatedAt
+      || (localConfigTime > 0 ? new Date(localConfigTime).toISOString() : new Date().toISOString());
+
     const merged = {
       ...serverData,
       ...localData,
-      // Mantenemos sorteos nuevos del servidor si tuvieran fecha más nueva
-      quinielaVespertina: serverData.quinielaVespertina?.fecha >= (localData.quinielaVespertina?.fecha || '')
-        ? serverData.quinielaVespertina
-        : localData.quinielaVespertina,
-      tombolaVespertina: serverData.tombolaVespertina?.fecha >= (localData.tombolaVespertina?.fecha || '')
-        ? serverData.tombolaVespertina
-        : localData.tombolaVespertina,
-      quinielaNocturna: serverData.quinielaNocturna?.fecha >= (localData.quinielaNocturna?.fecha || '')
-        ? serverData.quinielaNocturna
-        : localData.quinielaNocturna,
-      tombolaNocturna: serverData.tombolaNocturna?.fecha >= (localData.tombolaNocturna?.fecha || '')
-        ? serverData.tombolaNocturna
-        : localData.tombolaNocturna,
-      // Pero siempre preservamos promociones y ajustes del admin
+      quinielaVespertina: pickNewerLotteryGame(serverData.quinielaVespertina, localData.quinielaVespertina),
+      tombolaVespertina: pickNewerLotteryGame(serverData.tombolaVespertina, localData.tombolaVespertina),
+      quinielaNocturna: pickNewerLotteryGame(serverData.quinielaNocturna, localData.quinielaNocturna),
+      tombolaNocturna: pickNewerLotteryGame(serverData.tombolaNocturna, localData.tombolaNocturna),
       promociones: localData.promociones || serverData.promociones || [],
       rotationSeconds: localData.rotationSeconds || serverData.rotationSeconds || 60,
       activeScreens: localData.activeScreens || serverData.activeScreens,
@@ -174,22 +193,22 @@ export function reconcileData(serverData, localData) {
         ...serverData.cincoDeOro,
         ...localData.cincoDeOro
       },
+      configUpdatedAt: resolvedConfigTimestamp,
       updatedAt: new Date().toISOString()
     };
     return { dataToUse: merged, shouldRepopulateServer: true };
   }
 
-  // Si el servidor es más nuevo (por ejemplo, sync de La Banca durante el día),
-  // adoptamos los datos del servidor pero preservando promociones locales si existieran
+  // El servidor tiene una configuración explícita igual o más reciente (guardada vía POST /api/data)
   const merged = {
     ...serverData,
     promociones: (Array.isArray(serverData.promociones) && serverData.promociones.length > 0)
       ? serverData.promociones
       : (localData.promociones || []),
-    rotationSeconds: localData.rotationSeconds || serverData.rotationSeconds || 60,
+    rotationSeconds: serverData.rotationSeconds || localData.rotationSeconds || 60,
     activeScreens: {
-      ...serverData.activeScreens,
-      ...localData.activeScreens
+      ...localData.activeScreens,
+      ...serverData.activeScreens
     }
   };
 
