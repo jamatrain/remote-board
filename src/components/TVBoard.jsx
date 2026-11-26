@@ -6,15 +6,35 @@ import { CincoDeOroSorteoSlide } from './slides/CincoDeOroSorteoSlide';
 import { PromoSlide } from './slides/PromoSlide';
 import { Maximize, Minimize, SkipForward, SkipBack, Pause, Play, ChevronRight, ChevronLeft } from 'lucide-react';
 
+// Datos de contingencia para que el TV jamás quede colgado en pantalla de carga si Render duerme
+const DEFAULT_FALLBACK_DATA = {
+  fechaGeneral: '',
+  activeScreens: {
+    quinielaVespertina: true,
+    tombolaVespertina: true,
+    quinielaNocturna: true,
+    tombolaNocturna: true,
+    cincoDeOroSorteo: true,
+    cincoDeOro: true
+  },
+  quinielaVespertina: { fecha: '', numeros: Array(20).fill('') },
+  tombolaVespertina: { fecha: '', numeros: Array(20).fill('') },
+  quinielaNocturna: { fecha: '', numeros: Array(20).fill('') },
+  tombolaNocturna: { fecha: '', numeros: Array(20).fill('') },
+  cincoDeOro: { pozoOro: '$ 0', pozoRevancha: '$ 0', proximoSorteo: '' },
+  promociones: []
+};
+
 export function TVBoard() {
-  // Load initially from offline cache so TV never starts blank without internet
+  // Load initially from offline cache or fallback so TV never starts blank or stuck
   const [data, setData] = useState(() => {
     try {
       const cached = localStorage.getItem('kb_tv_offline_data');
-      return cached ? JSON.parse(cached) : null;
+      if (cached) return JSON.parse(cached);
     } catch (e) {
-      return null;
+      // ignore
     }
+    return DEFAULT_FALLBACK_DATA;
   });
 
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
@@ -78,8 +98,11 @@ export function TVBoard() {
     let fallbackInterval = null;
 
     const fetchData = async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
       try {
-        const res = await fetch('/api/data?t=' + Date.now());
+        const res = await fetch('/api/data?t=' + Date.now(), { signal: controller.signal });
+        clearTimeout(timeoutId);
         if (res.ok) {
           const json = await res.json();
           if (json.lastCommand) {
@@ -89,6 +112,7 @@ export function TVBoard() {
           setConnected(true);
         }
       } catch (err) {
+        clearTimeout(timeoutId);
         setConnected(false);
       }
     };
