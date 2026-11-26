@@ -5,6 +5,7 @@ import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import { syncWithLaBanca } from './src/services/labanca.js';
+import { isRemoteStorageEnabled, loadFromRemoteStorage, saveToRemoteStorage } from './src/services/remoteStorage.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -58,9 +59,16 @@ function readData() {
   }
 }
 
-function saveData(data) {
+function writeLocalData(data) {
   fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+function saveData(data) {
+  writeLocalData(data);
+  if (isRemoteStorageEnabled()) {
+    saveToRemoteStorage(data);
+  }
 }
 
 // Clients connected via Server-Sent Events (SSE)
@@ -113,6 +121,13 @@ const SYNC_COOLDOWN_MS = 60 * 1000; // 60s minimum interval
 // REST Endpoints
 app.get('/api/data', (req, res) => {
   res.json(readData());
+});
+
+app.get('/api/storage-status', (req, res) => {
+  res.json({
+    remoteStorageEnabled: isRemoteStorageEnabled(),
+    provider: isRemoteStorageEnabled() ? 'upstash-redis' : 'local-file'
+  });
 });
 
 // Check if a PIN is valid
@@ -265,21 +280,6 @@ setInterval(async () => {
   }
 }, 60 * 60 * 1000);
 
-// Initial sync on boot
-setTimeout(async () => {
-  try {
-    const current = readData();
-    const { result, updatedData } = await syncWithLaBanca(current);
-    if (result.updated) {
-      saveData(updatedData);
-      broadcastUpdate(updatedData);
-      console.log('⚡ [Boot-Sync] Datos iniciales sincronizados con La Banca');
-    }
-  } catch (e) {
-    console.log('ℹ️ [Boot-Sync] Servidor iniciado con datos vigentes');
-  }
-}, 2000);
-
 // Serve frontend in production or if dist exists
 const distPath = path.join(__dirname, 'dist');
 if (fs.existsSync(distPath)) {
@@ -289,6 +289,46 @@ if (fs.existsSync(distPath)) {
   });
 }
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor Remote-Board corriendo en http://0.0.0.0:${PORT}`);
-});
+async function hydrateFromRemoteStorage() {
+  const localSeed = readData();
+  if (!isRemoteStorageEnabled()) {
+    console.log('ℹ️ [Storage] Modo local (data/board-data.json). Configurá UPSTASH_REDIS_REST_URL y UPSTASH_REDIS_REST_TOKEN para persistencia en la nube.');
+    return;
+  }
+
+  const remoteData = await loadFromRemoteStorage();
+  if (remoteData && (remoteData.activeScreens || remoteData.promociones || remoteData.quinielaVespertina)) {
+    writeLocalData(remoteData);
+    console.log('☁️ [Upstash] Estado restaurado desde Redis remoto');
+  } else {
+    const initialized = await saveToRemoteStorage(localSeed);
+    console.log(initialized
+      ? '☁️ [Upstash] Redis inicializado con data/board-data.json'
+      : '⚠️ [Upstash] No se pudo inicializar Redis; usando data/board-data.json local');
+  }
+}
+
+async function startServer() {
+  await hydrateFromRemoteStorage();
+
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Servidor Remote-Board corriendo en http://0.0.0.0:${PORT}`);
+  });
+
+  // Initial sync on boot (después de hidratar desde Redis para no comparar contra el JSON semilla)
+  setTimeout(async () => {
+    try {
+      const current = readData();
+      const { result, updatedData } = await syncWithLaBanca(current);
+      if (result.updated) {
+        saveData(updatedData);
+        broadcastUpdate(updatedData);
+        console.log('⚡ [Boot-Sync] Datos iniciales sincronizados con La Banca');
+      }
+    } catch (e) {
+      console.log('ℹ️ [Boot-Sync] Servidor iniciado con datos vigentes');
+    }
+  }, 2000);
+}
+
+startServer();
