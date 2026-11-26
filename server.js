@@ -248,7 +248,7 @@ app.get('/api/events', (req, res) => {
   });
 });
 
-// Automatic periodic sync with La Banca (every 5 minutes)
+// Automatic periodic sync with La Banca (every 1 hour - 60 minutes to protect against rate-limiting)
 setInterval(async () => {
   try {
     const current = readData();
@@ -261,7 +261,7 @@ setInterval(async () => {
   } catch (e) {
     // Graceful catch
   }
-}, 5 * 60 * 1000);
+}, 60 * 60 * 1000);
 
 // Initial sync on boot
 setTimeout(async () => {
