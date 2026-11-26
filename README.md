@@ -76,19 +76,19 @@ sequenceDiagram
     Juan->>LocalDB: Abre Panel de Control
     LocalDB-->>Juan: Carga instantánea de promociones y estado (0 ms)
     Juan->>Cloud: GET /api/data (Consulta estado del servidor)
-    alt Servidor se reinició (datos por defecto de la imagen Docker)
-        Juan->>Juan: Reconciliador detecta updatedAt desactualizado
-        Juan->>Cloud: POST /api/data (Auto-repuebla el servidor con la base local)
+    alt Servidor se reinició o configUpdatedAt local es más reciente
+        Juan->>Juan: Reconciliador compara configUpdatedAt (independiente de Boot-Sync)
+        Juan->>Cloud: POST /api/data (Auto-repuebla anuncios y ajustes sin perder sorteos nuevos)
         Cloud-->>TV: Emite evento SSE con la configuración restaurada
         Juan->>Juan: Badge en cabecera: "Base Local: Sincronizada"
-    else Servidor tiene datos actualizados de La Banca
-        Cloud-->>Juan: Incorpora nuevos números a la base local
+    else Servidor tiene configuración o sorteos más recientes
+        Cloud-->>Juan: Incorpora nuevos números y configuración a la base local
     end
 ```
 
 ### Características de la Base de Datos Local:
-1. **Persistencia Total:** Todas las modificaciones (nuevas ofertas, pausas de productos, cambios de tema del 5 de Oro, ajustes de zoom) se guardan primero en la memoria local del teléfono (`localStorage`).
-2. **Auto-Repoblación Silenciosa:** Si el contenedor de Render se reinicia al día siguiente, el panel de control detecta automáticamente la discrepancia y restaura los datos del comercio en la nube y en el TV sin intervención del usuario.
+1. **Persistencia Total:** Todas las modificaciones (nuevas ofertas, pausas de productos, cambios de tema del 5 de Oro, ajustes de zoom) se guardan primero en la memoria local del teléfono (`localStorage`) con su propio timestamp de configuración (`configUpdatedAt`).
+2. **Auto-Repoblación Silenciosa (aislada de `Boot-Sync`):** Si el contenedor de Render se reinicia al desplegar una nueva versión o tras un *spin-down* y ejecuta `Boot-Sync`/`Auto-Sync` de La Banca, `updatedAt` cambia solo para los sorteos mientras `configUpdatedAt` protege las promociones y ajustes del comercio para restaurarlos sin sobrescrituras.
 3. **Copias de Seguridad (Exportar / Importar JSON):** En la pestaña **Ajustes TV**, el comerciante cuenta con botones para descargar un archivo `.json` de respaldo y restaurarlo en cualquier momento o dispositivo.
 
 ---
