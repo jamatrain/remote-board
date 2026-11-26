@@ -142,10 +142,12 @@ app.post('/api/change-pin', verifyPinMiddleware, (req, res) => {
 app.post('/api/data', verifyPinMiddleware, (req, res) => {
   try {
     const current = readData();
+    const now = new Date().toISOString();
     const updated = {
       ...current,
       ...req.body,
-      updatedAt: new Date().toISOString()
+      configUpdatedAt: req.body.configUpdatedAt || now,
+      updatedAt: now
     };
     saveData(updated);
     broadcastUpdate(updated);

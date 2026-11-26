@@ -234,16 +234,23 @@ export function AdminPanel() {
     loadData();
   }, []);
 
-  const handleSave = async (customData = null) => {
-    // Sanitizar toSave: asegurarse de que nunca sea un evento de React o DOM
-    let toSave = data;
+  const handleSave = async (customData = null, { preserveConfigTimestamp = false } = {}) => {
+    // Sanitizar baseData: asegurarse de que nunca sea un evento de React o DOM
+    let baseData = data;
     if (customData && typeof customData === 'object') {
       const isEvent = 'nativeEvent' in customData || 'target' in customData || '_reactName' in customData || typeof customData.preventDefault === 'function';
       if (!isEvent && (customData.activeScreens || customData.quinielaVespertina || customData.promociones || customData.rotationSeconds)) {
-        toSave = customData;
+        baseData = customData;
       }
     }
-    if (!toSave) return false;
+    if (!baseData) return false;
+
+    const toSave = {
+      ...baseData,
+      configUpdatedAt: (preserveConfigTimestamp && baseData.configUpdatedAt)
+        ? baseData.configUpdatedAt
+        : new Date().toISOString()
+    };
 
     // 1. Guardar de inmediato en la base de datos local de este dispositivo
     saveLocalData(toSave);
@@ -292,7 +299,7 @@ export function AdminPanel() {
         if (clientRes && !clientRes.error) {
           if (clientRes.result.updated) {
             setData(clientRes.updatedData);
-            await handleSave(clientRes.updatedData);
+            await handleSave(clientRes.updatedData, { preserveConfigTimestamp: true });
             setSyncFeedback({
               updated: true,
               details: clientRes.result.details,
